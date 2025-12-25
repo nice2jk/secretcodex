@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -82,7 +82,7 @@
                 {% endfor %}
               </div>
             {% endif %}
-            <p class="mb-0">{{ post.content|linebreaksbr }}</p>
+            <p class="mb-0">{{ post.content|urlize|linebreaksbr }}</p>
           </div>
         </div>
 
