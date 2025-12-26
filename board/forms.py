@@ -23,8 +23,9 @@ class CommentForm(forms.ModelForm):
 class LinkPostForm(forms.ModelForm):
     class Meta:
         model = LinkPost
-        fields = ['title', 'url', 'author']
+        fields = ['category', 'title', 'url', 'author']
         widgets = {
+            'category': forms.Select(attrs={'class': 'form-select'}),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'url': forms.URLInput(attrs={'class': 'form-control'}),
             'author': forms.TextInput(attrs={'class': 'form-control'}),

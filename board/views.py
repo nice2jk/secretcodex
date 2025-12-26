@@ -166,7 +166,7 @@ def post_delete(request, post_id):
 
 
 def link_list(request):
-    links = LinkPost.objects.order_by("-created_at")
+    links = LinkPost.objects.filter(category='info').order_by("-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -188,7 +188,9 @@ def link_create(request):
     if request.method == "POST":
         form = LinkPostForm(request.POST)
         if form.is_valid():
-            form.save()
+            link = form.save()
+            if link.category == 'best':
+                return redirect("board:menu6")
             return redirect("board:link_list")
     else:
         form = LinkPostForm()
@@ -237,6 +239,25 @@ def menu5(request):
     return render(
         request,
         "board/menu5.html",
+        {"page_obj": page_obj, "query": query},
+    )
+
+
+def menu6(request):
+    links = LinkPost.objects.filter(category='best').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "board/menu6.html",
         {"page_obj": page_obj, "query": query},
     )
 
@@ -338,4 +359,3 @@ def profile(request):
             "points": points,
         },
     )
-

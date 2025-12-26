@@ -39,6 +39,11 @@ class Comment(models.Model):
         return self.content[:20]
 
 class LinkPost(models.Model):
+    CATEGORY_CHOICES = [
+        ('info', '정보'),
+        ('best', '베스트야'),
+    ]
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='info', verbose_name='카테고리')
     title = models.CharField(max_length=200)
     url = models.URLField()
     author = models.CharField(max_length=20, default='익명')
