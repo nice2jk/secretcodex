@@ -261,6 +261,126 @@ def menu6(request):
         {"page_obj": page_obj, "query": query},
     )
 
+def menu7(request):
+    links = LinkPost.objects.filter(category='xart').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "board/menu7.html",
+        {"page_obj": page_obj, "query": query},
+    )
+
+def menu7_create(request):
+    if request.method == "POST":
+        data = request.POST.copy()
+        data['category'] = 'xart'
+        form = LinkPostForm(data)
+        if form.is_valid():
+            form.save()
+            return redirect("board:menu7")
+    else:
+        form = LinkPostForm(initial={'category': 'xart'})
+    return render(request, "board/link_form.html", {"form": form})
+
+def menu8(request):
+    links = LinkPost.objects.filter(category='soccer').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "board/menu8.html",
+        {"page_obj": page_obj, "query": query},
+    )
+
+def menu8_create(request):
+    if request.method == "POST":
+        data = request.POST.copy()
+        data['category'] = 'soccer'
+        form = LinkPostForm(data)
+        if form.is_valid():
+            form.save()
+            return redirect("board:menu8")
+    else:
+        form = LinkPostForm(initial={'category': 'soccer'})
+    return render(request, "board/link_form.html", {"form": form})
+
+def menu9(request):
+    links = LinkPost.objects.filter(category='baseball').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "board/menu9.html",
+        {"page_obj": page_obj, "query": query},
+    )
+
+def menu9_create(request):
+    if request.method == "POST":
+        data = request.POST.copy()
+        data['category'] = 'baseball'
+        form = LinkPostForm(data)
+        if form.is_valid():
+            form.save()
+            return redirect("board:menu9")
+    else:
+        form = LinkPostForm(initial={'category': 'baseball'})
+    return render(request, "board/link_form.html", {"form": form})
+
+def menu10(request):
+    links = LinkPost.objects.filter(category='stock').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    return render(
+        request,
+        "board/menu10.html",
+        {"page_obj": page_obj, "query": query},
+    )
+
+def menu10_create(request):
+    if request.method == "POST":
+        data = request.POST.copy()
+        data['category'] = 'stock'
+        form = LinkPostForm(data)
+        if form.is_valid():
+            form.save()
+            return redirect("board:menu10")
+    else:
+        form = LinkPostForm(initial={'category': 'stock'})
+    return render(request, "board/link_form.html", {"form": form})
+
 
 def signup(request):
     if request.method == "POST":

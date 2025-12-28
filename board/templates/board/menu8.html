@@ -1,0 +1,143 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>축구소식 - 쓰잘데기</title>
+    <link rel="icon" href="{% static 'board/trash-icon.svg' %}" type="image/svg+xml">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style> html { overflow-y: scroll; } </style>
+  </head>
+  <body class="bg-light">
+    <header class="bg-dark border-bottom">
+      <div class="container">
+        <div class="d-none d-lg-flex justify-content-between align-items-center py-3 border-bottom">
+          <a class="navbar-brand fw-bold fs-4 text-white text-decoration-none" href="/"><img src="{% static 'board/trash-icon.svg' %}" alt="trash icon" class="me-2" style="width: 32px; height: 32px;">쓰잘데기</a>
+          <div>
+            {% if user.is_authenticated %}
+              <a class="text-decoration-none fw-bold text-white" href="{% url 'board:profile' %}">{{ user.profile.nickname }}</a>
+            {% else %}
+              <a class="btn btn-outline-light btn-sm" href="{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}">가입/로그인</a>
+            {% endif %}
+          </div>
+        </div>
+        <nav class="navbar navbar-expand-lg navbar-dark p-0">
+          <a class="navbar-brand d-lg-none fw-bold fs-4 text-white" href="/"><img src="{% static 'board/trash-icon.svg' %}" alt="trash icon" class="me-2" style="width: 32px; height: 32px;">쓰잘데기</a>
+          <div class="d-flex align-items-center d-lg-none ms-auto">
+            {% if user.is_authenticated %}
+              <a class="text-decoration-none fw-bold text-white me-2" href="{% url 'board:profile' %}">{{ user.profile.nickname }}</a>
+            {% else %}
+              <a class="btn btn-outline-light btn-sm me-2" href="{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}">가입/로그인</a>
+            {% endif %}
+            <button
+              class="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#mainNav"
+              aria-controls="mainNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span class="navbar-toggler-icon"></span>
+            </button>
+          </div>
+          <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav w-100 justify-content-start">
+              <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu4/">추천</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
+              <li class="nav-item"><a class="nav-link active" href="/menu8/">축구소식</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu9/">야구소식</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu10/">주식소문</a></li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main class="py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0 fw-bold">축구소식</h1>
+              <a class="btn btn-dark" href="/menu8/new/">링크 등록</a>
+            </div>
+
+            <div class="list-group shadow-sm">
+              {% for post in page_obj %}
+                <div class="list-group-item py-2">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div>
+                      <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
+                      <a href="{{ post.url }}" class="fw-semibold text-decoration-none text-dark" target="_blank" rel="noopener">{{ post.title }}</a>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-content-between text-secondary small">
+                    <span>{{ post.author }}</span>
+                    <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
+                  </div>
+                </div>
+              {% empty %}
+                <div class="list-group-item text-secondary">게시물이 없습니다.</div>
+              {% endfor %}
+            </div>
+
+            {% if user.is_authenticated %}
+              <form class="d-flex gap-2 my-3 align-items-center justify-content-center" method="get">
+                <input type="search" name="q" class="form-control form-control-sm" placeholder="검색" value="{{ query|default:'' }}" style="max-width: 240px;">
+                <button type="submit" class="btn btn-dark btn-sm" aria-label="검색">
+                  <i class="bi bi-search"></i>
+                </button>
+              </form>
+            {% endif %}
+
+            {% if page_obj.paginator.num_pages > 1 %}
+              <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                  {% if page_obj.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ page_obj.previous_page_number }}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}">Prev</a>
+                    </li>
+                  {% else %}
+                    <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                  {% endif %}
+
+                  <li class="page-item disabled">
+                    <span class="page-link">
+                      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+                  </li>
+
+                  {% if page_obj.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ page_obj.next_page_number }}{% else %}?page={{ page_obj.next_page_number }}{% endif %}">Next</a>
+                    </li>
+                  {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                  {% endif %}
+                </ul>
+              </nav>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
