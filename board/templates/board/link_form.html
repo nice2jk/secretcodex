@@ -15,9 +15,9 @@
     <style> html { overflow-y: scroll; } </style>
   </head>
   <body class="bg-light">
-    <header class="bg-dark border-bottom">
+    <header class="bg-dark">
       <div class="container">
-        <div class="d-none d-lg-flex justify-content-between align-items-center py-3 border-bottom">
+        <div class="d-none d-lg-flex justify-content-between align-items-center py-3">
           <a class="navbar-brand fw-bold fs-4 text-white text-decoration-none" href="/"><img src="{% static 'board/trash-icon.svg' %}" alt="trash icon" class="me-2" style="width: 32px; height: 32px;">쓰잘데기</a>
           <div>
             {% if user.is_authenticated %}
@@ -50,14 +50,14 @@
           <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav w-100 justify-content-start">
               <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
-              <li class="nav-item"><a class="nav-link active" href="/menu3/">정보</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu3/' in request.path %}active{% endif %}" href="/menu3/">정보</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu4/">추천</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu8/">축구소식</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu9/">야구소식</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu10/">주식소문</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu6/' in request.path %}active{% endif %}" href="/menu6/">베스트야</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu7/' in request.path %}active{% endif %}" href="/menu7/">조공모음</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu8/' in request.path %}active{% endif %}" href="/menu8/">축구소식</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu9/' in request.path %}active{% endif %}" href="/menu9/">야구소식</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu10/' in request.path %}active{% endif %}" href="/menu10/">주식소문</a></li>
             </ul>
           </div>
         </nav>
@@ -67,28 +67,92 @@
     <main class="py-5">
       <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-          <h1 class="h3 mb-0 fw-bold">링크 등록</h1>
-          <a class="btn btn-outline-secondary" href="/menu3/">목록</a>
+          <h1 class="h3 mb-0 fw-bold">정보 등록</h1>
+          {% if '/menu6/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu6/">목록</a>
+          {% elif '/menu7/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu7/">목록</a>
+          {% elif '/menu8/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu8/">목록</a>
+          {% elif '/menu9/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu9/">목록</a>
+          {% elif '/menu10/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu10/">목록</a>
+          {% else %}
+            <a class="btn btn-outline-secondary" href="/menu3/">목록</a>
+          {% endif %}
         </div>
 
         <div class="card shadow-sm">
           <div class="card-body">
-            <form method="post" novalidate>
+            <form method="post">
               {% csrf_token %}
+              <!-- 현재 메뉴에 맞는 카테고리 값을 자동으로 설정하여 전송 -->
+              {% if '/menu3/' in request.path %}<input type="hidden" name="category" value="info">{% endif %}
+              {% if '/menu6/' in request.path %}<input type="hidden" name="category" value="best">{% endif %}
+              {% if '/menu7/' in request.path %}<input type="hidden" name="category" value="tribute">{% endif %}
+              {% if '/menu8/' in request.path %}<input type="hidden" name="category" value="soccer">{% endif %}
+              {% if '/menu9/' in request.path %}<input type="hidden" name="category" value="baseball">{% endif %}
+              {% if '/menu10/' in request.path %}<input type="hidden" name="category" value="stock">{% endif %}
+
+              {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+              
+              <!-- 혹시 화면에 없는 필드에서 에러가 나는지 확인하기 위한 코드 -->
+              {% if form.errors %}
+                <div class="alert alert-danger">
+                  <strong>에러 발생:</strong> {{ form.errors }}
+                </div>
+              {% endif %}
+
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>
+              {% endif %}
               <div class="mb-3">
                 <label class="form-label">제목</label>
                 {{ form.title }}
+                {% if form.title.errors %}
+                  <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                {% endif %}
               </div>
+              {% if form.content %}
+              <div class="mb-3">
+                <label class="form-label">내용</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                  <div class="text-danger small">{{ form.content.errors.0 }}</div>
+                {% endif %}
+              </div>
+              {% endif %}
+              {% if form.url %}
               <div class="mb-3">
                 <label class="form-label">URL</label>
                 {{ form.url }}
+                {% if form.url.errors %}
+                  <div class="text-danger small">{{ form.url.errors.0 }}</div>
+                {% endif %}
               </div>
+              {% endif %}
               <div class="mb-3">
                 <label class="form-label">작성자</label>
                 {{ form.author }}
+                {% if form.author.errors %}
+                  <div class="text-danger small">{{ form.author.errors.0 }}</div>
+                {% endif %}
               </div>
               <button type="submit" class="btn btn-dark">등록</button>
-              <a class="btn btn-link" href="/menu3/">취소</a>
+              {% if '/menu6/' in request.path %}
+                <a class="btn btn-link" href="/menu6/">취소</a>
+              {% elif '/menu7/' in request.path %}
+                <a class="btn btn-link" href="/menu7/">취소</a>
+              {% elif '/menu8/' in request.path %}
+                <a class="btn btn-link" href="/menu8/">취소</a>
+              {% elif '/menu9/' in request.path %}
+                <a class="btn btn-link" href="/menu9/">취소</a>
+              {% elif '/menu10/' in request.path %}
+                <a class="btn btn-link" href="/menu10/">취소</a>
+              {% else %}
+                <a class="btn btn-link" href="/menu3/">취소</a>
+              {% endif %}
             </form>
           </div>
         </div>
@@ -100,5 +164,16 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      document.querySelector('form').addEventListener('submit', function(e) {
+        const urlInput = document.querySelector('input[name="url"]');
+        if (urlInput && urlInput.value.trim() !== '') {
+          let val = urlInput.value.trim();
+          if (!/^https?:\/\//i.test(val)) {
+            urlInput.value = 'http://' + val;
+          }
+        }
+      });
+    </script>
   </body>
 </html>

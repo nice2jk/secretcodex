@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -89,14 +89,23 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           <div>
             {% if is_author %}
-              <a class="btn btn-outline-secondary me-2" href="{% url 'board:post_edit' post.id %}">수정</a>
-              <form method="post" action="{% url 'board:post_delete' post.id %}" class="d-inline">
+              {% if post.category == 'secret' %}
+                <a class="btn btn-outline-secondary me-2" href="{% url 'board:secret_edit' post.id %}">수정</a>
+                <form method="post" action="{% url 'board:secret_delete' post.id %}" class="d-inline">
+              {% else %}
+                <a class="btn btn-outline-secondary me-2" href="{% url 'board:post_edit' post.id %}">수정</a>
+                <form method="post" action="{% url 'board:post_delete' post.id %}" class="d-inline">
+              {% endif %}
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-danger">삭제</button>
               </form>
             {% endif %}
           </div>
-          <a class="btn btn-outline-secondary" href="/board/">목록</a>
+          {% if post.category == 'secret' %}
+            <a class="btn btn-outline-secondary" href="/menu5/">목록</a>
+          {% else %}
+            <a class="btn btn-outline-secondary" href="/board/">목록</a>
+          {% endif %}
         </div>
 
         <div class="card shadow-sm">

@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -71,7 +71,7 @@
           <div class="col-lg-10 col-xl-8">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h1 class="h3 mb-0 fw-bold">정보게시판</h1>
-              <a class="btn btn-dark" href="/menu3/new/">링크 등록</a>
+              <a class="btn btn-dark" href="/menu3/new/">정보 등록</a>
             </div>
 
             <div class="list-group shadow-sm">
@@ -80,8 +80,17 @@
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
                       <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
-                      <a href="{{ post.url }}" class="fw-semibold text-decoration-none text-dark" target="_blank" rel="noopener">{{ post.title }}</a>
+                      <span class="fw-bold text-dark">{{ post.title }}</span>
                     </div>
+                    <div class="d-flex align-items-center">
+                      <button class="btn btn-link p-0 text-decoration-none d-flex align-items-center" {% if user.is_authenticated %}onclick="toggleLike(this, {{ post.id }})"{% else %}onclick="alert('로그인이 필요합니다.')"{% endif %}>
+                        <i class="bi {% if post.is_liked %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
+                        <span class="ms-1 text-secondary small">{{ post.like_count|default:0 }}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="mt-2 mb-2 text-break post-content">
+                    {{ post.content|urlize|linebreaksbr }}
                   </div>
                   <div class="d-flex justify-content-between text-secondary small">
                     <span>{{ post.author }}</span>
@@ -139,5 +148,39 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      function toggleLike(btn, postId) {
+        fetch('/link/' + postId + '/like/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+          const icon = btn.querySelector('i');
+          const countSpan = btn.querySelector('span');
+          
+          countSpan.innerText = data.like_count;
+          if (data.is_liked) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+          } else {
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+          }
+        })
+        .catch(error => console.error('Error:', error));
+      }
+
+      document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll('.post-content a').forEach(function(link) {
+          link.setAttribute('target', '_blank');
+          link.setAttribute('rel', 'noopener noreferrer');
+        });
+      });
+    </script>
   </body>
 </html>

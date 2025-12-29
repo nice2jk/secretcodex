@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -68,7 +68,11 @@
       <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h1 class="h3 mb-0 fw-bold">{% if is_edit %}게시물 수정{% else %}게시물 작성{% endif %}</h1>
-          <a class="btn btn-outline-secondary" href="/board/">목록</a>
+          {% if '/menu5/' in request.path %}
+            <a class="btn btn-outline-secondary" href="/menu5/">목록</a>
+          {% else %}
+            <a class="btn btn-outline-secondary" href="/board/">목록</a>
+          {% endif %}
         </div>
 
         <div class="card shadow-sm">
@@ -96,6 +100,7 @@
                   </div>
                 </div>
               {% endif %}
+              {% if remaining_slots is not None %}
               <div class="mb-3">
                 <label class="form-label">이미지 (최대 3장)</label>
                 <div class="d-grid gap-2">
@@ -104,8 +109,13 @@
                   {% endfor %}
                 </div>
               </div>
+              {% endif %}
               <button type="submit" class="btn btn-dark">{% if is_edit %}수정{% else %}등록{% endif %}</button>
-              <a class="btn btn-link" href="/board/">취소</a>
+              {% if '/menu5/' in request.path %}
+                <a class="btn btn-link" href="/menu5/">취소</a>
+              {% else %}
+                <a class="btn btn-link" href="/board/">취소</a>
+              {% endif %}
             </form>
             {% if is_edit and images %}
               {% for image in images %}

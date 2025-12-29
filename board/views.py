@@ -3,9 +3,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.db.models import Q
 from django.utils.crypto import get_random_string
-from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm
+from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile
 
 
@@ -21,9 +23,9 @@ def _save_post_images(post, images, remaining):
 
 
 def home(request):
-    recent_posts = Post.objects.order_by("-created_at")[:3]
-    recent_links = LinkPost.objects.order_by("-created_at")[:3]
-    recent_recommended = Post.objects.filter(is_recommended=True).order_by("-created_at")[:3]
+    recent_posts = Post.objects.order_by("-created_at")[:5]
+    recent_links = LinkPost.objects.filter(category='info').order_by("-created_at")[:5]
+    recent_recommended = Post.objects.filter(is_recommended=True).order_by("-created_at")[:5]
     return render(
         request,
         "board/home.html",
@@ -36,7 +38,7 @@ def home(request):
 
 
 def post_list(request):
-    posts = Post.objects.order_by("-created_at")
+    posts = Post.objects.filter(category='common').order_by("-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         posts = posts.filter(
@@ -65,6 +67,7 @@ def post_create(request):
             else:
                 post = form.save(commit=False)
                 post.author = _get_display_name(request.user)
+                post.category = 'common'
                 post.save()
                 _save_post_images(post, images, 3)
                 if hasattr(request.user, "profile"):
@@ -177,12 +180,37 @@ def link_list(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/link_list.html",
         {"page_obj": page_obj, "query": query},
     )
 
+
+def info_create(request):
+    if request.method == "POST":
+        form = InfoPostForm(request.POST)
+        if form.is_valid():
+            link = form.save(commit=False)
+            link.category = 'info'
+            if request.user.is_authenticated:
+                link.author = _get_display_name(request.user)
+            link.save()
+            return redirect("board:link_list")
+    else:
+        initial_data = {'category': 'info'}
+        if request.user.is_authenticated:
+            initial_data['author'] = _get_display_name(request.user)
+        form = InfoPostForm(initial=initial_data)
+    return render(request, "board/link_form.html", {"form": form})
 
 def link_create(request):
     if request.method == "POST":
@@ -197,11 +225,35 @@ def link_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 
+@login_required
+@require_POST
+def link_like(request, link_id):
+    link = get_object_or_404(LinkPost, id=link_id)
+    if link.likes.filter(id=request.user.id).exists():
+        link.likes.remove(request.user)
+        is_liked = False
+    else:
+        link.likes.add(request.user)
+        is_liked = True
+    return JsonResponse({'like_count': link.likes.count(), 'is_liked': is_liked})
+
 def post_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     post.is_recommended = not post.is_recommended
     post.save()
     return redirect(request.META.get("HTTP_REFERER", "board:post_list"))
+
+@login_required
+@require_POST
+def post_like_json(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        is_liked = False
+    else:
+        post.likes.add(request.user)
+        is_liked = True
+    return JsonResponse({'like_count': post.likes.count(), 'is_liked': is_liked})
 
 
 def menu4(request):
@@ -225,7 +277,7 @@ def menu4(request):
 
 @login_required
 def menu5(request):
-    links = LinkPost.objects.order_by("-created_at")
+    links = Post.objects.filter(category='secret').order_by("-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -233,15 +285,89 @@ def menu5(request):
             | Q(url__icontains=query)
             | Q(author__icontains=query)
         )
-    paginator = Paginator(links, 20)
+    paginator = Paginator(links, 20) # links 변수명을 그대로 사용했지만 실제로는 Post 객체입니다
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for post in page_obj:
+        post.like_count = post.likes.count()
+        if request.user.is_authenticated:
+            post.is_liked = post.likes.filter(id=request.user.id).exists()
+        else:
+            post.is_liked = False
+
     return render(
         request,
         "board/menu5.html",
         {"page_obj": page_obj, "query": query},
     )
 
+@login_required
+def secret_create(request):
+    if request.method == "POST":
+        form = PostForm(request.POST)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = _get_display_name(request.user)
+            post.category = 'secret'
+            post.save()
+            if hasattr(request.user, "profile"):
+                request.user.profile.points += 10
+                request.user.profile.save()
+            return redirect("board:secret_detail", post_id=post.id)
+    else:
+        form = PostForm()
+    return render(request, "board/post_form.html", {"form": form})
+
+@login_required
+def secret_detail(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if post.category != 'secret':
+        return redirect("board:post_detail", post_id=post.id)
+    
+    post.views += 1
+    post.save()
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.post = post
+            comment.author = _get_display_name(request.user)
+            comment.save()
+            if hasattr(request.user, "profile"):
+                request.user.profile.points += 3
+                request.user.profile.save()
+            return redirect("board:secret_detail", post_id=post.id)
+    else:
+        form = CommentForm()
+    is_author = request.user.is_authenticated and _get_display_name(request.user) == post.author
+    return render(
+        request,
+        "board/post_detail.html",
+        {"post": post, "form": form, "is_author": is_author},
+    )
+
+@login_required
+def secret_edit(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if _get_display_name(request.user) != post.author:
+        return redirect("board:secret_detail", post_id=post.id)
+    if request.method == "POST":
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            return redirect("board:secret_detail", post_id=post.id)
+    else:
+        form = PostForm(instance=post)
+    return render(request, "board/post_form.html", {"form": form, "is_edit": True, "post": post})
+
+@login_required
+def secret_delete(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    if _get_display_name(request.user) == post.author and request.method == "POST":
+        post.delete()
+        return redirect("board:menu5")
+    return redirect("board:secret_detail", post_id=post.id)
 
 def menu6(request):
     links = LinkPost.objects.filter(category='best').order_by("-created_at")
@@ -255,6 +381,14 @@ def menu6(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/menu6.html",
@@ -273,6 +407,14 @@ def menu7(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/menu7.html",
@@ -303,6 +445,14 @@ def menu8(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/menu8.html",
@@ -333,6 +483,14 @@ def menu9(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/menu9.html",
@@ -363,6 +521,14 @@ def menu10(request):
     paginator = Paginator(links, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
     return render(
         request,
         "board/menu10.html",

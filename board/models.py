@@ -4,10 +4,12 @@ from django.contrib.auth.models import User
 class Post(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
+    category = models.CharField(max_length=20, default='common')
     created_at = models.DateTimeField(auto_now_add=True)
     views = models.PositiveIntegerField(default=0)
     author = models.CharField(max_length=20, default='익명')
     is_recommended = models.BooleanField(default=False)
+    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
 
     def __str__(self):
         return self.title
@@ -49,9 +51,11 @@ class LinkPost(models.Model):
     ]
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='info', verbose_name='카테고리')
     title = models.CharField(max_length=200)
-    url = models.URLField()
+    url = models.URLField(blank=True, null=True)
+    content = models.TextField(max_length=140, blank=True)
     author = models.CharField(max_length=20, default='익명')
     created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_links', blank=True)
 
     def __str__(self):
         return self.title

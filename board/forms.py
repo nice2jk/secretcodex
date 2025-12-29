@@ -20,7 +20,19 @@ class CommentForm(forms.ModelForm):
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
+class InfoPostForm(forms.ModelForm):
+    class Meta:
+        model = LinkPost
+        fields = ['category', 'title', 'content', 'author']
+        widgets = {
+            'category': forms.HiddenInput(),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': '140', 'placeholder': '내용을 입력하세요 (최대 140자)'}),
+            'author': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
 class LinkPostForm(forms.ModelForm):
+    url = forms.URLField(widget=forms.URLInput(attrs={'class': 'form-control'}), required=True)
     class Meta:
         model = LinkPost
         fields = ['category', 'title', 'url', 'author']
