@@ -1,4 +1,4 @@
-﻿﻿{% load static %}
+﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -49,10 +49,10 @@
           </div>
           <div class="collapse navbar-collapse" id="mainNav">
             <ul class="navbar-nav w-100 justify-content-start">
-              <li class="nav-item"><a class="nav-link active" href="/board/">썰게시판</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu4/">추천</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
+              <li class="nav-item"><a class="nav-link {% if post.category != 'secret' %}active{% endif %}" href="/board/">썰게시판</a></li>
+              <li class="nav-item"><a class="nav-link {% if post.category == 'secret' %}active{% endif %}" href="/menu5/">비밀</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu8/">축구소식</a></li>
@@ -73,7 +73,7 @@
         <div class="card shadow-sm mb-4">
           <div class="card-body">
             <div class="text-secondary small mb-2">
-              {{ post.created_at|date:"Y-m-d H:i" }} | 작성자 {{ post.author }}
+              {{ post.created_at|date:"Y-m-d H:i" }}{% if post.category != 'secret' %} | 작성자 {{ post.author }}{% endif %}
             </div>
             {% if post.images.exists %}
               <div class="mb-3">
@@ -133,7 +133,7 @@
               {% for comment in post.comments.all %}
                 <div class="list-group-item">
                   <div class="d-flex justify-content-between text-secondary small mb-1">
-                    <span>{{ comment.author }}</span>
+                    <span>{% if post.category != 'secret' %}{{ comment.author }}{% endif %}</span>
                     <span>{{ comment.created_at|date:"Y-m-d H:i" }}</span>
                   </div>
                   <div>{{ comment.content|linebreaksbr }}</div>
