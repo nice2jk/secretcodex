@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.db.models import Count, Q
 from django.utils.crypto import get_random_string
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
-from .models import Comment, LinkPost, Post, PostImage, Profile
+from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost
 
 
 def _get_display_name(user):
@@ -24,7 +24,7 @@ def _save_post_images(post, images, remaining):
 
 def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
-    recent_links = LinkPost.objects.filter(category='info').order_by("-created_at")[:5]
+    recent_links = InfoPost.objects.order_by("-created_at")[:5]
     recent_recommended = Post.objects.filter(is_recommended=True).order_by("-created_at")[:5]
     return render(
         request,
@@ -169,12 +169,11 @@ def post_delete(request, post_id):
 
 
 def link_list(request):
-    links = LinkPost.objects.filter(category='info').order_by("-created_at")
+    links = InfoPost.objects.order_by("-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
             Q(title__icontains=query)
-            | Q(url__icontains=query)
             | Q(author__icontains=query)
         )
     paginator = Paginator(links, 20)
@@ -200,13 +199,12 @@ def info_create(request):
         form = InfoPostForm(request.POST)
         if form.is_valid():
             link = form.save(commit=False)
-            link.category = 'info'
             if request.user.is_authenticated:
                 link.author = _get_display_name(request.user)
             link.save()
             return redirect("board:link_list")
     else:
-        initial_data = {'category': 'info'}
+        initial_data = {}
         if request.user.is_authenticated:
             initial_data['author'] = _get_display_name(request.user)
         form = InfoPostForm(initial=initial_data)
@@ -228,20 +226,22 @@ def link_create(request):
 @require_POST
 def link_like(request, link_id):
     link = get_object_or_404(LinkPost, id=link_id)
-    if link.category == 'info':
-        if not request.user.is_authenticated:
-            return JsonResponse({'error': 'Login required'}, status=403)
-        if link.likes.filter(id=request.user.id).exists():
-            link.likes.remove(request.user)
-            is_liked = False
-        else:
-            link.likes.add(request.user)
-            is_liked = True
-        return JsonResponse({'like_count': link.likes.count(), 'is_liked': is_liked})
+    link.is_recommended = not link.is_recommended
+    link.save()
+    return JsonResponse({'like_count': 0, 'is_liked': link.is_recommended})
+
+@require_POST
+def info_like(request, info_id):
+    post = get_object_or_404(InfoPost, id=info_id)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Login required'}, status=403)
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        is_liked = False
     else:
-        link.is_recommended = not link.is_recommended
-        link.save()
-        return JsonResponse({'like_count': 0, 'is_liked': link.is_recommended})
+        post.likes.add(request.user)
+        is_liked = True
+    return JsonResponse({'like_count': post.likes.count(), 'is_liked': is_liked})
 
 def post_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -277,7 +277,7 @@ def popular_list(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.is_liked = True
+        link.is_liked = link.is_recommended
 
     return render(
         request,

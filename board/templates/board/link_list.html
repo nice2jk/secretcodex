@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -151,7 +151,7 @@
     ></script>
     <script>
       function toggleLike(btn, postId) {
-        fetch('/link/' + postId + '/like/', {
+        fetch('/info/' + postId + '/like/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

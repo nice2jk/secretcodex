@@ -165,7 +165,11 @@
             icon.classList.add('bi-heart');
             const listItem = btn.closest('.list-group-item');
             if (listItem) {
+              const listGroup = listItem.parentElement;
               listItem.remove();
+              if (listGroup.children.length === 0) {
+                listGroup.innerHTML = '<div class="list-group-item text-secondary">게시물이 없습니다.</div>';
+              }
             }
           }
         })

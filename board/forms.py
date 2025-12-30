@@ -1,7 +1,7 @@
 ﻿from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Post, Comment, LinkPost, Profile
+from .models import Post, Comment, LinkPost, Profile, InfoPost
 
 class PostForm(forms.ModelForm):
     class Meta:
@@ -22,10 +22,9 @@ class CommentForm(forms.ModelForm):
 
 class InfoPostForm(forms.ModelForm):
     class Meta:
-        model = LinkPost
-        fields = ['category', 'title', 'content', 'author']
+        model = InfoPost
+        fields = ['title', 'content', 'author']
         widgets = {
-            'category': forms.HiddenInput(),
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': '140', 'placeholder': '내용을 입력하세요 (최대 140자)'}),
             'author': forms.TextInput(attrs={'class': 'form-control'}),

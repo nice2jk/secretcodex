@@ -40,19 +40,27 @@ class Comment(models.Model):
     def __str__(self):
         return self.content[:20]
 
+class InfoPost(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField(max_length=140)
+    author = models.CharField(max_length=20, default='익명')
+    created_at = models.DateTimeField(auto_now_add=True)
+    likes = models.ManyToManyField(User, related_name='liked_infoposts', blank=True)
+
+    def __str__(self):
+        return self.title
+
 class LinkPost(models.Model):
     CATEGORY_CHOICES = [
-        ('info', '정보'),
         ('best', '베스트야'),
         ('xart', '조공모음'),
         ('soccer', '축구소식'),
         ('baseball', '야구소식'),
         ('stock', '주식소문'),
     ]
-    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='info', verbose_name='카테고리')
+    category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='best', verbose_name='카테고리')
     title = models.CharField(max_length=200)
-    url = models.URLField(blank=True, null=True)
-    content = models.TextField(max_length=140, blank=True)
+    url = models.URLField(max_length=500, blank=True, null=True)
     author = models.CharField(max_length=20, default='익명')
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='liked_links', blank=True)
