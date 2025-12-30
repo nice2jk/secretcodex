@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.db.models import Count, Q
 from django.utils.crypto import get_random_string
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
-from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost
+from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
 
 
 def _get_display_name(user):
@@ -652,3 +652,13 @@ def profile(request):
             "points": points,
         },
     )
+
+def match_list(request):
+    matches = SoccerMatch.objects.all().order_by('match_date')
+    paginator = Paginator(matches, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'page_obj': page_obj,
+    }
+    return render(request, 'board/match_list.html', context)

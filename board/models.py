@@ -68,3 +68,21 @@ class LinkPost(models.Model):
 
     def __str__(self):
         return self.title
+
+class SoccerMatch(models.Model):
+    match_id = models.CharField(max_length=32, unique=True)
+    round_num = models.CharField(max_length=20, null=True, blank=True)
+    match_date = models.DateTimeField()
+    league = models.CharField(max_length=20)
+    home_team = models.CharField(max_length=100)
+    away_team = models.CharField(max_length=100)
+    home_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    away_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'soccer_matches'
+        ordering = ['match_date']
+
+    def __str__(self):
+        return f"{self.home_team} vs {self.away_team}"
