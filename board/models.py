@@ -56,6 +56,7 @@ class LinkPost(models.Model):
     author = models.CharField(max_length=20, default='익명')
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='liked_links', blank=True)
+    is_recommended = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

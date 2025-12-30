@@ -5,7 +5,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.utils.crypto import get_random_string
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile
@@ -225,17 +225,23 @@ def link_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 
-@login_required
 @require_POST
 def link_like(request, link_id):
     link = get_object_or_404(LinkPost, id=link_id)
-    if link.likes.filter(id=request.user.id).exists():
-        link.likes.remove(request.user)
-        is_liked = False
+    if link.category == 'info':
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Login required'}, status=403)
+        if link.likes.filter(id=request.user.id).exists():
+            link.likes.remove(request.user)
+            is_liked = False
+        else:
+            link.likes.add(request.user)
+            is_liked = True
+        return JsonResponse({'like_count': link.likes.count(), 'is_liked': is_liked})
     else:
-        link.likes.add(request.user)
-        is_liked = True
-    return JsonResponse({'like_count': link.likes.count(), 'is_liked': is_liked})
+        link.is_recommended = not link.is_recommended
+        link.save()
+        return JsonResponse({'like_count': 0, 'is_liked': link.is_recommended})
 
 def post_like(request, post_id):
     post = get_object_or_404(Post, id=post_id)
@@ -255,9 +261,32 @@ def post_like_json(request, post_id):
         is_liked = True
     return JsonResponse({'like_count': post.likes.count(), 'is_liked': is_liked})
 
+def popular_list(request):
+    target_categories = ['best', 'xart', 'soccer', 'baseball', 'stock']
+    links = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")
+    
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(url__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.is_liked = True
+
+    return render(
+        request,
+        "board/menu_popular.html",
+        {"page_obj": page_obj, "query": query},
+    )
 
 def menu4(request):
-    posts = Post.objects.filter(is_recommended=True).order_by("-created_at")
+    posts = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         posts = posts.filter(
@@ -265,9 +294,7 @@ def menu4(request):
             | Q(content__icontains=query)
             | Q(author__icontains=query)
         )
-    paginator = Paginator(posts, 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    page_obj = posts[:20]
     return render(
         request,
         "board/menu4.html",
@@ -383,11 +410,7 @@ def menu6(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.like_count = link.likes.count()
-        if request.user.is_authenticated:
-            link.is_liked = link.likes.filter(id=request.user.id).exists()
-        else:
-            link.is_liked = False
+        link.is_liked = link.is_recommended
 
     return render(
         request,
@@ -409,11 +432,7 @@ def menu7(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.like_count = link.likes.count()
-        if request.user.is_authenticated:
-            link.is_liked = link.likes.filter(id=request.user.id).exists()
-        else:
-            link.is_liked = False
+        link.is_liked = link.is_recommended
 
     return render(
         request,
@@ -447,11 +466,7 @@ def menu8(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.like_count = link.likes.count()
-        if request.user.is_authenticated:
-            link.is_liked = link.likes.filter(id=request.user.id).exists()
-        else:
-            link.is_liked = False
+        link.is_liked = link.is_recommended
 
     return render(
         request,
@@ -485,11 +500,7 @@ def menu9(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.like_count = link.likes.count()
-        if request.user.is_authenticated:
-            link.is_liked = link.likes.filter(id=request.user.id).exists()
-        else:
-            link.is_liked = False
+        link.is_liked = link.is_recommended
 
     return render(
         request,
@@ -523,11 +534,7 @@ def menu10(request):
     page_obj = paginator.get_page(page_number)
 
     for link in page_obj:
-        link.like_count = link.likes.count()
-        if request.user.is_authenticated:
-            link.is_liked = link.likes.filter(id=request.user.id).exists()
-        else:
-            link.is_liked = False
+        link.is_liked = link.is_recommended
 
     return render(
         request,

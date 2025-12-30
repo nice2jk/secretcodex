@@ -17,6 +17,7 @@ urlpatterns = [
     path("link/<int:link_id>/like/", views.link_like, name="link_like"),
     path("menu3/", views.link_list, name="link_list"),
     path("menu3/new/", views.info_create, name="link_create"),
+    path("popular/", views.popular_list, name="popular_list"),
     path("menu4/", views.menu4, name="menu4"),
     path("menu5/", views.menu5, name="menu5"),
     path("menu5/new/", views.secret_create, name="secret_create"),

@@ -54,6 +54,7 @@
               <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
               <li class="nav-item"><a class="nav-link active" href="/menu5/">비밀</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
+              <li class="nav-item"><a class="nav-link" href="/popular/">인기모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu8/">축구소식</a></li>
@@ -85,7 +86,7 @@
                     </div>
                     <div class="d-flex align-items-center">
                       <button class="btn btn-link p-0 text-decoration-none d-flex align-items-center" {% if user.is_authenticated %}onclick="toggleLike(this, {{ post.id }})"{% else %}onclick="alert('로그인이 필요합니다.')"{% endif %}>
-                        <i class="bi {% if post.is_liked %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
+                        <i class="bi {% if post.is_liked %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %} text-primary"></i>
                         <span class="ms-1 text-secondary small">{{ post.like_count|default:0 }}</span>
                       </button>
                     </div>
@@ -161,11 +162,11 @@
           
           countSpan.innerText = data.like_count;
           if (data.is_liked) {
-            icon.classList.remove('bi-heart');
-            icon.classList.add('bi-heart-fill');
+            icon.classList.remove('bi-hand-thumbs-up');
+            icon.classList.add('bi-hand-thumbs-up-fill');
           } else {
-            icon.classList.remove('bi-heart-fill');
-            icon.classList.add('bi-heart');
+            icon.classList.remove('bi-hand-thumbs-up-fill');
+            icon.classList.add('bi-hand-thumbs-up');
           }
         })
         .catch(error => console.error('Error:', error));

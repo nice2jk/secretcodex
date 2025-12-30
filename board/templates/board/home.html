@@ -53,6 +53,7 @@
               <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
+              <li class="nav-item"><a class="nav-link" href="/popular/">인기모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu8/">축구소식</a></li>
@@ -84,9 +85,9 @@
         <div class="row g-3">
           <div class="col-md-4">
             <div class="p-4 bg-white rounded-4 border h-100">
-              <h3 class="h5 mb-3"><a href="/board/" class="text-decoration-none text-dark">썰게시판</a></h3>
+              <h3 class="h5 mb-3"><a href="/menu4/" class="text-decoration-none text-dark">추천게시판</a></h3>
               <div class="list-group list-group-flush">
-                {% for post in recent_posts %}
+                {% for post in recent_recommended %}
                   <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action px-0 border-0">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
                     <div class="text-secondary small">{{ post.author }} · 댓글 {{ post.comments.count }}</div>
@@ -111,12 +112,12 @@
                 {% endfor %}
               </div>
             </div>
-          </div>
+          </div>          
           <div class="col-md-4">
             <div class="p-4 bg-white rounded-4 border h-100">
-              <h3 class="h5 mb-3"><a href="/menu4/" class="text-decoration-none text-dark">추천게시판</a></h3>
+              <h3 class="h5 mb-3"><a href="/board/" class="text-decoration-none text-dark">썰게시판</a></h3>
               <div class="list-group list-group-flush">
-                {% for post in recent_recommended %}
+                {% for post in recent_posts %}
                   <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action px-0 border-0">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
                     <div class="text-secondary small">{{ post.author }} · 댓글 {{ post.comments.count }}</div>

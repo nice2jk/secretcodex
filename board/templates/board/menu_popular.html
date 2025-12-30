@@ -1,10 +1,10 @@
-﻿{% load static %}
+{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>정보게시판 - 쓰잘데기</title>
+    <title>인기모음 - 쓰잘데기</title>
     <link rel="icon" href="{% static 'board/trash-icon.svg' %}" type="image/svg+xml">
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -53,8 +53,8 @@
               <li class="nav-item"><a class="nav-link" href="/menu4/">추천</a></li>
               <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
-              <li class="nav-item"><a class="nav-link active" href="/menu3/">정보</a></li>
-              <li class="nav-item"><a class="nav-link" href="/popular/">인기모음</a></li>
+              <li class="nav-item"><a class="nav-link" href="/menu3/">정보</a></li>
+              <li class="nav-item"><a class="nav-link active" href="/popular/">인기모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu8/">축구소식</a></li>
@@ -71,8 +71,7 @@
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
             <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 mb-0 fw-bold">정보게시판</h1>
-              <a class="btn btn-dark" href="/menu3/new/">정보 등록</a>
+              <h1 class="h3 mb-0 fw-bold">인기모음</h1>
             </div>
 
             <div class="list-group shadow-sm">
@@ -81,17 +80,13 @@
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
                       <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
-                      <span class="fw-bold text-dark">{{ post.title }}</span>
+                      <a href="{{ post.url }}" class="fw-semibold text-decoration-none text-dark" target="_blank" rel="noopener">{{ post.title }}</a>
                     </div>
                     <div class="d-flex align-items-center">
-                      <button class="btn btn-link p-0 text-decoration-none d-flex align-items-center" {% if user.is_authenticated %}onclick="toggleLike(this, {{ post.id }})"{% else %}onclick="alert('로그인이 필요합니다.'); window.location.href='{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}'"{% endif %}>
-                        <i class="bi {% if post.is_liked %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %} text-primary"></i>
-                        <span class="ms-1 text-secondary small">{{ post.like_count|default:0 }}</span>
+                      <button class="btn btn-link p-0 text-decoration-none d-flex align-items-center" onclick="toggleLike(this, {{ post.id }})">
+                        <i class="bi {% if post.is_liked %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
                       </button>
                     </div>
-                  </div>
-                  <div class="mt-2 mb-2 text-break post-content">
-                    {{ post.content|urlize|linebreaksbr }}
                   </div>
                   <div class="d-flex justify-content-between text-secondary small">
                     <span>{{ post.author }}</span>
@@ -162,26 +157,20 @@
         .then(response => response.json())
         .then(data => {
           const icon = btn.querySelector('i');
-          const countSpan = btn.querySelector('span');
-          
-          countSpan.innerText = data.like_count;
           if (data.is_liked) {
-            icon.classList.remove('bi-hand-thumbs-up');
-            icon.classList.add('bi-hand-thumbs-up-fill');
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
           } else {
-            icon.classList.remove('bi-hand-thumbs-up-fill');
-            icon.classList.add('bi-hand-thumbs-up');
+            icon.classList.remove('bi-heart-fill');
+            icon.classList.add('bi-heart');
+            const listItem = btn.closest('.list-group-item');
+            if (listItem) {
+              listItem.remove();
+            }
           }
         })
         .catch(error => console.error('Error:', error));
       }
-
-      document.addEventListener("DOMContentLoaded", function() {
-        document.querySelectorAll('.post-content a').forEach(function(link) {
-          link.setAttribute('target', '_blank');
-          link.setAttribute('rel', 'noopener noreferrer');
-        });
-      });
     </script>
   </body>
 </html>
