@@ -56,7 +56,7 @@ class LinkPost(models.Model):
     CATEGORY_CHOICES = [
         ('best', '베스트야'),
         ('xart', '조공모음'),
-        ('soccer', '축구소식'),
+        ('movie', '영화소식'),
         ('baseball', '야구소식'),
         ('stock', '주식소문'),
     ]

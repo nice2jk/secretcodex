@@ -27,7 +27,7 @@ def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
     recent_links = InfoPost.objects.order_by("-created_at")[:5]
     recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
-    target_categories = ['best', 'xart', 'soccer', 'baseball', 'stock']
+    target_categories = ['best', 'xart', 'movie', 'baseball', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
     return render(
         request,
@@ -266,7 +266,7 @@ def post_like_json(request, post_id):
     return JsonResponse({'like_count': post.likes.count(), 'is_liked': is_liked})
 
 def popular_list(request):
-    target_categories = ['best', 'xart', 'soccer', 'baseball', 'stock']
+    target_categories = ['best', 'xart', 'movie', 'baseball', 'stock']
     links = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")
     
     query = request.GET.get("q", "").strip()
@@ -457,7 +457,7 @@ def menu7_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 def menu8(request):
-    links = LinkPost.objects.filter(category='soccer').order_by("-id")
+    links = LinkPost.objects.filter(category='movie').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -481,13 +481,13 @@ def menu8(request):
 def menu8_create(request):
     if request.method == "POST":
         data = request.POST.copy()
-        data['category'] = 'soccer'
+        data['category'] = 'movie'
         form = LinkPostForm(data)
         if form.is_valid():
             form.save()
             return redirect("board:menu8")
     else:
-        form = LinkPostForm(initial={'category': 'soccer'})
+        form = LinkPostForm(initial={'category': 'movie'})
     return render(request, "board/link_form.html", {"form": form})
 
 def menu9(request):
