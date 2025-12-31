@@ -45,6 +45,7 @@ class Comment(models.Model):
 class InfoPost(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField(max_length=140)
+    category = models.CharField(max_length=20, default='thread')
     author = models.CharField(max_length=20, default='익명')
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='liked_infoposts', blank=True)

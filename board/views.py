@@ -25,7 +25,8 @@ def _save_post_images(post, images, remaining):
 
 def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
-    recent_links = InfoPost.objects.order_by("-created_at")[:5]
+    recent_links = InfoPost.objects.filter(category='thread').order_by("-created_at")[:5]
+    recent_ai_news = InfoPost.objects.filter(category='ai').order_by("-created_at")[:5]
     recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
     target_categories = ['best', 'xart', 'movie', 'baseball', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
@@ -35,6 +36,7 @@ def home(request):
         {
             "recent_posts": recent_posts,
             "recent_links": recent_links,
+            "recent_ai_news": recent_ai_news,
             "recent_recommended": recent_recommended,
             "recent_popular": recent_popular,
         },
@@ -173,7 +175,7 @@ def post_delete(request, post_id):
 
 
 def link_list(request):
-    links = InfoPost.objects.order_by("-created_at")
+    links = InfoPost.objects.filter(category='thread').order_by("-created_at")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -194,7 +196,7 @@ def link_list(request):
     return render(
         request,
         "board/link_list.html",
-        {"page_obj": page_obj, "query": query},
+        {"page_obj": page_obj, "query": query, "board_type": "thread"},
     )
 
 
@@ -205,6 +207,7 @@ def info_create(request):
             link = form.save(commit=False)
             if request.user.is_authenticated:
                 link.author = _get_display_name(request.user)
+            link.category = 'thread'
             link.save()
             return redirect("board:link_list")
     else:
@@ -213,6 +216,48 @@ def info_create(request):
             initial_data['author'] = _get_display_name(request.user)
         form = InfoPostForm(initial=initial_data)
     return render(request, "board/link_form.html", {"form": form})
+
+def ai_list(request):
+    links = InfoPost.objects.filter(category='ai').order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    if query:
+        links = links.filter(
+            Q(title__icontains=query)
+            | Q(author__icontains=query)
+        )
+    paginator = Paginator(links, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    for link in page_obj:
+        link.like_count = link.likes.count()
+        if request.user.is_authenticated:
+            link.is_liked = link.likes.filter(id=request.user.id).exists()
+        else:
+            link.is_liked = False
+
+    return render(
+        request,
+        "board/link_list.html",
+        {"page_obj": page_obj, "query": query, "board_type": "ai"},
+    )
+
+def ai_create(request):
+    if request.method == "POST":
+        form = InfoPostForm(request.POST)
+        if form.is_valid():
+            link = form.save(commit=False)
+            if request.user.is_authenticated:
+                link.author = _get_display_name(request.user)
+            link.category = 'ai'
+            link.save()
+            return redirect("board:ai_list")
+    else:
+        initial_data = {}
+        if request.user.is_authenticated:
+            initial_data['author'] = _get_display_name(request.user)
+        form = InfoPostForm(initial=initial_data)
+    return render(request, "board/link_form.html", {"form": form, "board_type": "ai"})
 
 def link_create(request):
     if request.method == "POST":
