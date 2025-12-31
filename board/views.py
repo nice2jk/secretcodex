@@ -28,7 +28,7 @@ def home(request):
     recent_links = InfoPost.objects.filter(category='thread').order_by("-created_at")[:5]
     recent_ai_news = InfoPost.objects.filter(category='ai').order_by("-created_at")[:5]
     recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
-    target_categories = ['best', 'xart', 'movie', 'baseball', 'stock']
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
     return render(
         request,
@@ -311,7 +311,7 @@ def post_like_json(request, post_id):
     return JsonResponse({'like_count': post.likes.count(), 'is_liked': is_liked})
 
 def popular_list(request):
-    target_categories = ['best', 'xart', 'movie', 'baseball', 'stock']
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     links = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")
     
     query = request.GET.get("q", "").strip()
@@ -536,7 +536,7 @@ def menu8_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 def menu9(request):
-    links = LinkPost.objects.filter(category='baseball').order_by("-id")
+    links = LinkPost.objects.filter(category='itnews').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -560,13 +560,13 @@ def menu9(request):
 def menu9_create(request):
     if request.method == "POST":
         data = request.POST.copy()
-        data['category'] = 'baseball'
+        data['category'] = 'itnews'
         form = LinkPostForm(data)
         if form.is_valid():
             form.save()
             return redirect("board:menu9")
     else:
-        form = LinkPostForm(initial={'category': 'baseball'})
+        form = LinkPostForm(initial={'category': 'itnews'})
     return render(request, "board/link_form.html", {"form": form})
 
 def menu10(request):

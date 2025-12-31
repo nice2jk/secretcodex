@@ -59,7 +59,7 @@
               <li class="nav-item"><a class="nav-link {% if '/menu6/' in request.path %}active{% endif %}" href="/menu6/">베스트야</a></li>
               <li class="nav-item"><a class="nav-link {% if '/menu7/' in request.path %}active{% endif %}" href="/menu7/">조공모음</a></li>
               <li class="nav-item"><a class="nav-link {% if '/menu8/' in request.path %}active{% endif %}" href="/menu8/">영화소식</a></li>
-              <li class="nav-item"><a class="nav-link {% if '/menu9/' in request.path %}active{% endif %}" href="/menu9/">야구소식</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu9/' in request.path %}active{% endif %}" href="/menu9/">IT 뉴스</a></li>
               <li class="nav-item"><a class="nav-link {% if '/menu10/' in request.path %}active{% endif %}" href="/menu10/">주식소문</a></li>
             </ul>
           </div>
@@ -72,6 +72,8 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
           {% if '/ai-news/' in request.path %}
             <h1 class="h3 mb-0 fw-bold">AI뉴스 등록</h1>
+          {% elif '/menu9/' in request.path %}
+            <h1 class="h3 mb-0 fw-bold">IT 뉴스 등록</h1>
           {% else %}
             <h1 class="h3 mb-0 fw-bold">쓰레드 등록</h1>
           {% endif %}
@@ -102,7 +104,7 @@
               {% if '/menu6/' in request.path %}<input type="hidden" name="category" value="best">{% endif %}
               {% if '/menu7/' in request.path %}<input type="hidden" name="category" value="tribute">{% endif %}
               {% if '/menu8/' in request.path %}<input type="hidden" name="category" value="movie">{% endif %}
-              {% if '/menu9/' in request.path %}<input type="hidden" name="category" value="baseball">{% endif %}
+              {% if '/menu9/' in request.path %}<input type="hidden" name="category" value="itnews">{% endif %}
               {% if '/menu10/' in request.path %}<input type="hidden" name="category" value="stock">{% endif %}
 
               {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
