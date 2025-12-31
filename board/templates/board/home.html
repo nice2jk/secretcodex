@@ -91,7 +91,7 @@
                 {% for post in recent_recommended %}
                   <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action px-0 border-0">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                    <div class="text-secondary small">{{ post.author }} · 댓글 {{ post.comments.count }}</div>
+                    <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
                   </a>
                 {% empty %}
                   <div class="text-secondary small">게시물이 없습니다.</div>
@@ -116,12 +116,12 @@
           </div>          
           <div class="col-md-4">
             <div class="p-4 bg-white rounded-4 border h-100">
-              <h3 class="h5 mb-3"><a href="/board/" class="text-decoration-none text-dark">썰게시판</a></h3>
+              <h3 class="h5 mb-3"><a href="/popular/" class="text-decoration-none text-dark">인기모음</a></h3>
               <div class="list-group list-group-flush">
-                {% for post in recent_posts %}
-                  <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action px-0 border-0">
+                {% for post in recent_popular %}
+                  <a href="{{ post.url }}" class="list-group-item list-group-item-action px-0 border-0" target="_blank" rel="noopener">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                    <div class="text-secondary small">{{ post.author }} · 댓글 {{ post.comments.count }}</div>
+                    <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }} · {{ post.created_at|date:"Y-m-d" }}</div>
                   </a>
                 {% empty %}
                   <div class="text-secondary small">게시물이 없습니다.</div>

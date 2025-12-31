@@ -25,7 +25,9 @@ def _save_post_images(post, images, remaining):
 def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
     recent_links = InfoPost.objects.order_by("-created_at")[:5]
-    recent_recommended = Post.objects.filter(is_recommended=True).order_by("-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'soccer', 'baseball', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
     return render(
         request,
         "board/home.html",
@@ -33,6 +35,7 @@ def home(request):
             "recent_posts": recent_posts,
             "recent_links": recent_links,
             "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
         },
     )
 
