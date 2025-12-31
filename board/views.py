@@ -401,7 +401,7 @@ def secret_delete(request, post_id):
     return redirect("board:secret_detail", post_id=post.id)
 
 def menu6(request):
-    links = LinkPost.objects.filter(category='best').order_by("-created_at")
+    links = LinkPost.objects.filter(category='best').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -423,7 +423,7 @@ def menu6(request):
     )
 
 def menu7(request):
-    links = LinkPost.objects.filter(category='xart').order_by("-created_at")
+    links = LinkPost.objects.filter(category='xart').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -457,7 +457,7 @@ def menu7_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 def menu8(request):
-    links = LinkPost.objects.filter(category='soccer').order_by("-created_at")
+    links = LinkPost.objects.filter(category='soccer').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -491,7 +491,7 @@ def menu8_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 def menu9(request):
-    links = LinkPost.objects.filter(category='baseball').order_by("-created_at")
+    links = LinkPost.objects.filter(category='baseball').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
@@ -525,7 +525,7 @@ def menu9_create(request):
     return render(request, "board/link_form.html", {"form": form})
 
 def menu10(request):
-    links = LinkPost.objects.filter(category='stock').order_by("-created_at")
+    links = LinkPost.objects.filter(category='stock').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
