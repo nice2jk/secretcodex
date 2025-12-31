@@ -136,5 +136,18 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      // 파일 용량 제한 (10MB)
+      const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+      document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.addEventListener('change', function() {
+          if (this.files[0] && this.files[0].size > MAX_FILE_SIZE) {
+            alert("파일 크기가 너무 큽니다. 10MB 이하의 이미지를 선택해주세요.");
+            this.value = ""; // 선택 초기화
+          }
+        });
+      });
+    </script>
   </body>
 </html>
