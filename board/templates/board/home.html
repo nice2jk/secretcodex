@@ -106,7 +106,7 @@
                 {% for post in recent_links %}
                   <a href="/menu3/" class="list-group-item list-group-item-action px-0 border-0">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                    <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }}</div>
+                    <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }} · {{ post.created_at|date:"Y-m-d" }}</div>
                   </a>
                 {% empty %}
                   <div class="text-secondary small">게시물이 없습니다.</div>
@@ -121,7 +121,7 @@
                 {% for post in recent_popular %}
                   <a href="{{ post.url }}" class="list-group-item list-group-item-action px-0 border-0" target="_blank" rel="noopener">
                     <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                    <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                    <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
                   </a>
                 {% empty %}
                   <div class="text-secondary small">게시물이 없습니다.</div>
