@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db.models import Count, Q
+from django.db.models.functions import ExtractYear
 from django.utils.crypto import get_random_string
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
@@ -657,7 +658,7 @@ def profile(request):
     )
 
 def match_list(request):
-    matches = SoccerMatch.objects.all().order_by('match_date')
+    matches = SoccerMatch.objects.annotate(year=ExtractYear('match_date')).order_by('-year', '-round_num', '-match_date')
     paginator = Paginator(matches, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)

@@ -1,4 +1,6 @@
-﻿from django.db import models
+﻿import hashlib
+from django.db import models
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 class Post(models.Model):
@@ -65,6 +67,22 @@ class LinkPost(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name='liked_links', blank=True)
     is_recommended = models.BooleanField(default=False)
+    link_id = models.CharField(max_length=32, blank=True)
+
+    def clean(self):
+        if not self.link_id:
+            target_str = f"{self.title}{self.url or ''}"
+            generated_id = hashlib.md5(target_str.encode('utf-8')).hexdigest()
+            if LinkPost.objects.filter(link_id=generated_id).exclude(pk=self.pk).exists():
+                raise ValidationError("이미 등록된 링크입니다.")
+            self.link_id = generated_id
+        super().clean()
+
+    def save(self, *args, **kwargs):
+        if not self.link_id:
+            target_str = f"{self.title}{self.url or ''}"
+            self.link_id = hashlib.md5(target_str.encode('utf-8')).hexdigest()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
