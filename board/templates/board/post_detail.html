@@ -113,10 +113,10 @@
           </div>
           <div>
             {% if post.category == 'secret' %}
-              <a class="btn btn-outline-secondary" href="/menu5/">목록</a>
+              <a class="btn btn-outline-secondary" href="/menu5/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
             {% else %}
               <a class="btn btn-dark me-2" href="/board/new/">글쓰기</a>
-              <a class="btn btn-outline-secondary" href="/board/">목록</a>
+              <a class="btn btn-outline-secondary" href="/board/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
             {% endif %}
           </div>
         </div>

@@ -83,7 +83,7 @@
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
                       <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
-                      <a href="/menu5/{{ post.id }}/" class="fw-semibold text-decoration-none text-dark">{{ post.title }}</a>
+                      <a href="/menu5/{{ post.id }}/?page={{ page_obj.number }}{% if query %}&q={{ query|urlencode }}{% endif %}" class="fw-semibold text-decoration-none text-dark">{{ post.title }}</a>
                       <span class="text-primary ms-1 fw-bold">[{{ post.comments.count }}]</span>
                     </div>
                     <div class="d-flex align-items-center">

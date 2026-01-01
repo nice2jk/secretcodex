@@ -87,7 +87,7 @@
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
                       <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
-                      <a href="/board/{{ post.id }}/" class="fw-semibold text-decoration-none text-dark">{{ post.title }}</a>
+                      <a href="/board/{{ post.id }}/?page={{ page_obj.number }}{% if query %}&q={{ query|urlencode }}{% endif %}" class="fw-semibold text-decoration-none text-dark">{{ post.title }}</a>
                       <span class="text-primary ms-1 fw-bold">[{{ post.comments.count }}]</span>
                       {% if post.images.exists %}
                         <span class="text-secondary ms-1" title="이미지 있음">
