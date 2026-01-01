@@ -1,0 +1,15 @@
+{
+  "name": "쓰잘데기",
+  "short_name": "쓰잘데기",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#212529",
+  "icons": [
+    {
+      "src": "/static/board/trash-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.generic import TemplateView
 
 from . import views
 
@@ -44,4 +45,6 @@ urlpatterns = [
     path("password/reset/", views.password_reset, name="password_reset"),
     path("password/change/", views.password_change, name="password_change"),
     path("profile/", views.profile, name="profile"),
+    path('manifest.json', TemplateView.as_view(template_name='board/manifest.json', content_type='application/json'), name='manifest'),
+    path('service-worker.js', TemplateView.as_view(template_name='board/service-worker.js', content_type='application/javascript'), name='service-worker'),
 ]
