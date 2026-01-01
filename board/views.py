@@ -44,7 +44,7 @@ def home(request):
 
 
 def post_list(request):
-    posts = Post.objects.filter(category='common').order_by("-created_at")
+    posts = Post.objects.filter(category='common').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         posts = posts.filter(
@@ -353,7 +353,7 @@ def menu4(request):
 
 @login_required
 def menu5(request):
-    links = Post.objects.filter(category='secret').order_by("-created_at")
+    links = Post.objects.filter(category='secret').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
         links = links.filter(
