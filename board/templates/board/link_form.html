@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -129,7 +129,7 @@
               {% if form.content %}
               <div class="mb-3">
                 <label class="form-label">내용</label>
-                {{ form.content }}
+                {{ form.content }}                
                 {% if form.content.errors %}
                   <div class="text-danger small">{{ form.content.errors.0 }}</div>
                 {% endif %}

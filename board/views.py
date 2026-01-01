@@ -55,10 +55,20 @@ def post_list(request):
     paginator = Paginator(posts, 20)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
+
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/post_list.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 
@@ -193,10 +203,20 @@ def link_list(request):
         else:
             link.is_liked = False
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/link_list.html",
-        {"page_obj": page_obj, "query": query, "board_type": "thread"},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "board_type": "thread",
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 
@@ -236,15 +256,29 @@ def ai_list(request):
         else:
             link.is_liked = False
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/link_list.html",
-        {"page_obj": page_obj, "query": query, "board_type": "ai"},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "board_type": "ai",
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def ai_create(request):
     if request.method == "POST":
         form = InfoPostForm(request.POST)
+        if 'content' in form.fields:
+            form.fields['content'].max_length = 500
+            form.fields['content'].widget.attrs['maxlength'] = 500
+            form.fields['content'].widget.attrs['placeholder'] = "내용을 입력하세요. (최대 500자)"
         if form.is_valid():
             link = form.save(commit=False)
             if request.user.is_authenticated:
@@ -257,6 +291,10 @@ def ai_create(request):
         if request.user.is_authenticated:
             initial_data['author'] = _get_display_name(request.user)
         form = InfoPostForm(initial=initial_data)
+        if 'content' in form.fields:
+            form.fields['content'].max_length = 500
+            form.fields['content'].widget.attrs['maxlength'] = 500
+            form.fields['content'].widget.attrs['placeholder'] = "내용을 입력하세요. (최대 500자)"
     return render(request, "board/link_form.html", {"form": form, "board_type": "ai"})
 
 def link_create(request):
@@ -343,7 +381,9 @@ def menu4(request):
             | Q(content__icontains=query)
             | Q(author__icontains=query)
         )
-    page_obj = posts[:20]
+    paginator = Paginator(posts, 20)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
     return render(
         request,
         "board/menu4.html",
@@ -372,10 +412,19 @@ def menu5(request):
         else:
             post.is_liked = False
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu5.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 @login_required
@@ -461,10 +510,19 @@ def menu6(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu6.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def menu7(request):
@@ -483,10 +541,19 @@ def menu7(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu7.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def menu7_create(request):
@@ -517,10 +584,19 @@ def menu8(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu8.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def menu8_create(request):
@@ -551,10 +627,19 @@ def menu9(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu9.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def menu9_create(request):
@@ -585,10 +670,19 @@ def menu10(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
+    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+
     return render(
         request,
         "board/menu10.html",
-        {"page_obj": page_obj, "query": query},
+        {
+            "page_obj": page_obj,
+            "query": query,
+            "recent_recommended": recent_recommended,
+            "recent_popular": recent_popular,
+        },
     )
 
 def menu10_create(request):

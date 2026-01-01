@@ -72,6 +72,43 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
+            <ul class="nav nav-tabs mb-3" id="bestTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend-tab-pane" type="button" role="tab" aria-controls="recommend-tab-pane" aria-selected="true">추천</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="popular-tab" data-bs-toggle="tab" data-bs-target="#popular-tab-pane" type="button" role="tab" aria-controls="popular-tab-pane" aria-selected="false">인기모음</button>
+              </li>
+            </ul>
+            <div class="tab-content mb-4" id="bestTabContent">
+              <div class="tab-pane fade show active" id="recommend-tab-pane" role="tabpanel" aria-labelledby="recommend-tab" tabindex="0">
+                <div class="list-group shadow-sm">
+                  {% for post in recent_recommended %}
+                    <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action py-2">
+                      <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
+                      <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
+                    </a>
+                  {% empty %}
+                    <div class="list-group-item text-secondary">게시물이 없습니다.</div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="tab-pane fade" id="popular-tab-pane" role="tabpanel" aria-labelledby="popular-tab" tabindex="0">
+                <div class="list-group shadow-sm">
+                  {% for post in recent_popular %}
+                    <a href="{{ post.url }}" class="list-group-item list-group-item-action py-2" target="_blank" rel="noopener">
+                      <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
+                      <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                    </a>
+                  {% empty %}
+                    <div class="list-group-item text-secondary">게시물이 없습니다.</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h1 class="h3 mb-0 fw-bold"><a href="/menu10/" class="text-decoration-none text-dark">주식소문</a></h1>
               <a class="btn btn-dark" href="/menu10/new/">링크 등록</a>
@@ -108,6 +145,10 @@
                   <i class="bi bi-search"></i>
                 </button>
               </form>
+            {% else %}
+              <div class="text-center my-3 text-secondary small">
+                검색이 필요할 경우 로그인하세요.
+              </div>
             {% endif %}
 
             {% if page_obj.paginator.num_pages > 1 %}
@@ -121,11 +162,31 @@
                     <li class="page-item disabled"><span class="page-link">Prev</span></li>
                   {% endif %}
 
-                  <li class="page-item disabled">
-                    <span class="page-link">
-                      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                    </span>
-                  </li>
+                  {% for i in page_obj.paginator.page_range %}
+                    {% if page_obj.paginator.num_pages <= 5 %}
+                      <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                        <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                      </li>
+                    {% elif page_obj.number <= 3 %}
+                      {% if i <= 5 %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% elif page_obj.number > page_obj.paginator.num_pages|add:"-3" %}
+                      {% if i > page_obj.paginator.num_pages|add:"-5" %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% else %}
+                      {% if i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
 
                   {% if page_obj.has_next %}
                     <li class="page-item">
