@@ -108,6 +108,10 @@
                   <i class="bi bi-search"></i>
                 </button>
               </form>
+            {% else %}
+              <div class="text-center my-3 text-secondary small">
+                검색이 필요할 경우 로그인하세요.
+              </div>
             {% endif %}
 
             {% if page_obj.paginator.num_pages > 1 %}
@@ -121,11 +125,31 @@
                     <li class="page-item disabled"><span class="page-link">Prev</span></li>
                   {% endif %}
 
-                  <li class="page-item disabled">
-                    <span class="page-link">
-                      {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-                    </span>
-                  </li>
+                  {% for i in page_obj.paginator.page_range %}
+                    {% if page_obj.paginator.num_pages <= 5 %}
+                      <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                        <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                      </li>
+                    {% elif page_obj.number <= 3 %}
+                      {% if i <= 5 %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% elif page_obj.number > page_obj.paginator.num_pages|add:"-3" %}
+                      {% if i > page_obj.paginator.num_pages|add:"-5" %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% else %}
+                      {% if i >= page_obj.number|add:"-2" and i <= page_obj.number|add:"2" %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                          <a class="page-link" href="{% if query %}?q={{ query|urlencode }}&page={{ i }}{% else %}?page={{ i }}{% endif %}">{{ i }}</a>
+                        </li>
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
 
                   {% if page_obj.has_next %}
                     <li class="page-item">
