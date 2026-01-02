@@ -1,10 +1,12 @@
-﻿from django.contrib.auth import authenticate, login, logout
+﻿import json
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q
 from django.db.models.functions import ExtractYear
 from django.utils.crypto import get_random_string
@@ -296,6 +298,25 @@ def ai_create(request):
             form.fields['content'].widget.attrs['maxlength'] = 500
             form.fields['content'].widget.attrs['placeholder'] = "내용을 입력하세요. (최대 500자)"
     return render(request, "board/link_form.html", {"form": form, "board_type": "ai"})
+
+@csrf_exempt
+@require_POST
+def ai_create_api(request):
+    try:
+        data = json.loads(request.body)
+        form = InfoPostForm(data)
+        if 'content' in form.fields:
+            form.fields['content'].max_length = 500
+
+        if form.is_valid():
+            link = form.save(commit=False)
+            link.category = 'ai'
+            link.save()
+            return JsonResponse({'message': 'success', 'id': link.id}, status=201)
+        else:
+            return JsonResponse({'errors': form.errors}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
 def link_create(request):
     if request.method == "POST":

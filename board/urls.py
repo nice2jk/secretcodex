@@ -21,6 +21,7 @@ urlpatterns = [
     path("menu3/new/", views.info_create, name="link_create"),
     path("ai-news/", views.ai_list, name="ai_list"),
     path("ai-news/new/", views.ai_create, name="ai_create"),
+    path("api/ai-news/new/", views.ai_create_api, name="ai_create_api"),
     path("matches/", views.match_list, name="match_list"),
     path("popular/", views.popular_list, name="popular_list"),
     path("menu4/", views.menu4, name="menu4"),
