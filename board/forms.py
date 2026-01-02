@@ -1,7 +1,33 @@
 ﻿from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.utils.safestring import mark_safe
 from .models import Post, Comment, LinkPost, Profile, InfoPost
+
+class CharCountTextarea(forms.Textarea):
+    def render(self, name, value, attrs=None, renderer=None):
+        final_attrs = self.build_attrs(self.attrs, attrs)
+        html = super().render(name, value, attrs, renderer)
+        field_id = final_attrs.get('id', f'id_{name}')
+        max_length = final_attrs.get('maxlength', 500)
+        
+        counter_html = f'''
+        <div id="{field_id}_counter" class="text-end text-muted small mt-1">0 / {max_length}</div>
+        <script>
+            (function() {{
+                var textarea = document.getElementById('{field_id}');
+                var counter = document.getElementById('{field_id}_counter');
+                if (textarea && counter) {{
+                    var update = function() {{
+                        counter.textContent = textarea.value.length + ' / {max_length}';
+                    }};
+                    textarea.addEventListener('input', update);
+                    update();
+                }}
+            }})();
+        </script>
+        '''
+        return mark_safe(html + counter_html)
 
 class PostForm(forms.ModelForm):
     class Meta:
@@ -26,9 +52,16 @@ class InfoPostForm(forms.ModelForm):
         fields = ['title', 'content', 'author']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': '140', 'placeholder': '내용을 입력하세요 (최대 140자)'}),
+            'content': CharCountTextarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': '500', 'placeholder': '내용을 입력하세요 (최대 500자)'}),
             'author': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+class ThreadPostForm(InfoPostForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['content'].max_length = 140
+        self.fields['content'].widget.attrs['maxlength'] = '140'
+        self.fields['content'].widget.attrs['placeholder'] = '내용을 입력하세요 (최대 140자)'
 
 class LinkPostForm(forms.ModelForm):
     url = forms.URLField(widget=forms.URLInput(attrs={'class': 'form-control'}), required=True)

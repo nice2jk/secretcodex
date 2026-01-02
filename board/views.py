@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q
 from django.db.models.functions import ExtractYear
 from django.utils.crypto import get_random_string
-from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm
+from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm, ThreadPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
 
 
@@ -224,7 +224,7 @@ def link_list(request):
 
 def info_create(request):
     if request.method == "POST":
-        form = InfoPostForm(request.POST)
+        form = ThreadPostForm(request.POST)
         if form.is_valid():
             link = form.save(commit=False)
             if request.user.is_authenticated:
@@ -236,7 +236,7 @@ def info_create(request):
         initial_data = {}
         if request.user.is_authenticated:
             initial_data['author'] = _get_display_name(request.user)
-        form = InfoPostForm(initial=initial_data)
+        form = ThreadPostForm(initial=initial_data)
     return render(request, "board/link_form.html", {"form": form})
 
 def ai_list(request):
@@ -277,10 +277,6 @@ def ai_list(request):
 def ai_create(request):
     if request.method == "POST":
         form = InfoPostForm(request.POST)
-        if 'content' in form.fields:
-            form.fields['content'].max_length = 500
-            form.fields['content'].widget.attrs['maxlength'] = 500
-            form.fields['content'].widget.attrs['placeholder'] = "내용을 입력하세요. (최대 500자)"
         if form.is_valid():
             link = form.save(commit=False)
             if request.user.is_authenticated:
@@ -293,10 +289,6 @@ def ai_create(request):
         if request.user.is_authenticated:
             initial_data['author'] = _get_display_name(request.user)
         form = InfoPostForm(initial=initial_data)
-        if 'content' in form.fields:
-            form.fields['content'].max_length = 500
-            form.fields['content'].widget.attrs['maxlength'] = 500
-            form.fields['content'].widget.attrs['placeholder'] = "내용을 입력하세요. (최대 500자)"
     return render(request, "board/link_form.html", {"form": form, "board_type": "ai"})
 
 @csrf_exempt
