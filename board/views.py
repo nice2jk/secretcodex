@@ -27,7 +27,7 @@ def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
     recent_links = InfoPost.objects.filter(category='thread').order_by("-created_at")[:5]
     recent_ai_news = InfoPost.objects.filter(category='ai').order_by("-created_at")[:5]
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
     return render(
@@ -56,7 +56,7 @@ def post_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -203,7 +203,7 @@ def link_list(request):
         else:
             link.is_liked = False
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -256,7 +256,7 @@ def ai_list(request):
         else:
             link.is_liked = False
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -373,7 +373,7 @@ def popular_list(request):
     )
 
 def menu4(request):
-    posts = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")
+    posts = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")
     query = request.GET.get("q", "").strip()
     if query:
         posts = posts.filter(
@@ -412,7 +412,7 @@ def menu5(request):
         else:
             post.is_liked = False
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -510,7 +510,7 @@ def menu6(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -541,7 +541,7 @@ def menu7(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -584,7 +584,7 @@ def menu8(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -627,7 +627,7 @@ def menu9(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
@@ -670,7 +670,7 @@ def menu10(request):
     for link in page_obj:
         link.is_liked = link.is_recommended
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-created_at")[:5]
+    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
     target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
     recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
 
