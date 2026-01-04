@@ -13,7 +13,7 @@
       crossorigin="anonymous"
     >
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style> html { overflow-y: scroll; } </style>
+    <style> html { overflow-y: scroll; } .dropdown:hover .dropdown-menu { display: block; margin-top: 0; } </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3843225232663919"
      crossorigin="anonymous"></script>
@@ -21,6 +21,8 @@
   <body class="bg-light">
     <header class="bg-dark border-bottom">
       <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-8">
         <div class="d-none d-lg-flex justify-content-between align-items-center py-3 border-bottom">
           <a class="navbar-brand fw-bold fs-4 text-white text-decoration-none" href="/"><img src="{% static 'board/trash-icon.svg' %}" alt="trash icon" class="me-2" style="width: 32px; height: 32px;">쓰잘데기</a>
           <div>
@@ -57,17 +59,25 @@
               <li class="nav-item"><a class="nav-link" href="/board/">썰게시판</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu3/">쓰레드</a></li>
               <li class="nav-item"><a class="nav-link" href="{% url 'board:ai_list' %}">AI뉴스</a></li>
-              <li class="nav-item"><a class="nav-link" href="/matches/">경기일정</a></li>
               <li class="nav-item"><a class="nav-link" href="/popular/">인기모음</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu6/">베스트야</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu7/">조공모음</a></li>
-              <li class="nav-item"><a class="nav-link active" href="/menu8/">영화소식</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu9/">IT 뉴스</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu10/">주식소문</a></li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle {% if '/menu6/' in request.path or '/menu7/' in request.path or '/menu8/' in request.path or '/menu9/' in request.path or '/menu10/' in request.path %}active{% endif %}" href="/menu6/" role="button">
+                  베스트야
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/menu7/">조공모음</a></li>
+                  <li><a class="dropdown-item" href="/menu8/">영화소식</a></li>
+                  <li><a class="dropdown-item" href="/menu9/">IT 뉴스</a></li>
+                  <li><a class="dropdown-item" href="/menu10/">주식소문</a></li>
+                </ul>
+              </li>
+              <li class="nav-item"><a class="nav-link" href="/matches/">해외축구일정</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu5/">비밀</a></li>
             </ul>
           </div>
         </nav>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -111,6 +121,14 @@
             </div>
 
             <hr class="my-4">
+
+            <div class="row g-1 mb-4">
+              <div class="col"><a href="/menu6/" class="btn btn-outline-dark w-100 p-1">베스트야</a></div>
+              <div class="col"><a href="/menu7/" class="btn btn-outline-dark w-100 p-1">조공모음</a></div>
+              <div class="col"><a href="/menu8/" class="btn btn-dark w-100 p-1">영화소식</a></div>
+              <div class="col"><a href="/menu9/" class="btn btn-outline-dark w-100 p-1">IT 뉴스</a></div>
+              <div class="col"><a href="/menu10/" class="btn btn-outline-dark w-100 p-1">주식소문</a></div>
+            </div>
 
             <div class="d-flex justify-content-between align-items-center mb-4">
               <h1 class="h3 mb-0 fw-bold"><a href="/menu8/" class="text-decoration-none text-dark">영화소식</a></h1>
