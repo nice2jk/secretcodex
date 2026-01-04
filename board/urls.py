@@ -19,6 +19,7 @@ urlpatterns = [
     path("info/<int:info_id>/like/", views.info_like, name="info_like"),
     path("menu3/", views.link_list, name="link_list"),
     path("menu3/new/", views.info_create, name="link_create"),
+    path("api/menu3/new/", views.thread_create_api, name="thread_create_api"),
     path("ai-news/", views.ai_list, name="ai_list"),
     path("ai-news/new/", views.ai_create, name="ai_create"),
     path("api/ai-news/new/", views.ai_create_api, name="ai_create_api"),

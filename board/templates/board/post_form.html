@@ -51,7 +51,6 @@
             <ul class="navbar-nav w-100 justify-content-start">
               <li class="nav-item"><a class="nav-link" href="/menu4/">추천</a></li>
               <li class="nav-item"><a class="nav-link {% if '/menu5/' not in request.path %}active{% endif %}" href="/board/">썰게시판</a></li>
-              <li class="nav-item"><a class="nav-link {% if '/menu5/' in request.path %}active{% endif %}" href="/menu5/">비밀</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu3/">쓰레드</a></li>
               <li class="nav-item"><a class="nav-link" href="{% url 'board:ai_list' %}">AI뉴스</a></li>
               <li class="nav-item"><a class="nav-link" href="/matches/">경기일정</a></li>
@@ -61,6 +60,7 @@
               <li class="nav-item"><a class="nav-link" href="/menu8/">영화소식</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu9/">IT 뉴스</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu10/">주식소문</a></li>
+              <li class="nav-item"><a class="nav-link {% if '/menu5/' in request.path %}active{% endif %}" href="/menu5/">비밀</a></li>
             </ul>
           </div>
         </nav>

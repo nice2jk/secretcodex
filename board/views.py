@@ -239,6 +239,26 @@ def info_create(request):
         form = ThreadPostForm(initial=initial_data)
     return render(request, "board/link_form.html", {"form": form})
 
+@csrf_exempt
+@require_POST
+def thread_create_api(request):
+    try:
+        data = json.loads(request.body)
+        form = ThreadPostForm(data)
+        
+        if 'content' in form.fields:
+            form.fields['content'].max_length = 140
+
+        if form.is_valid():
+            link = form.save(commit=False)
+            link.category = 'thread'
+            link.save()
+            return JsonResponse({'message': 'success', 'id': link.id}, status=201)
+        else:
+            return JsonResponse({'errors': form.errors}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
 def ai_list(request):
     links = InfoPost.objects.filter(category='ai').order_by("-created_at")
     query = request.GET.get("q", "").strip()
