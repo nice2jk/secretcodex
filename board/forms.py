@@ -59,9 +59,9 @@ class InfoPostForm(forms.ModelForm):
 class ThreadPostForm(InfoPostForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['content'].max_length = 140
-        self.fields['content'].widget.attrs['maxlength'] = '140'
-        self.fields['content'].widget.attrs['placeholder'] = '내용을 입력하세요 (최대 140자)'
+        self.fields['content'].max_length = 500
+        self.fields['content'].widget.attrs['maxlength'] = '500'
+        self.fields['content'].widget.attrs['placeholder'] = '내용을 입력하세요 (최대 500자)'
 
 class LinkPostForm(forms.ModelForm):
     url = forms.URLField(widget=forms.URLInput(attrs={'class': 'form-control'}), required=True)
