@@ -74,7 +74,6 @@ def post_list(request):
     )
 
 
-@login_required
 def post_create(request):
     if request.method == "POST":
         form = PostForm(request.POST)
@@ -84,11 +83,14 @@ def post_create(request):
                 form.add_error(None, "이미지는 최대 3장까지 업로드할 수 있습니다.")
             else:
                 post = form.save(commit=False)
-                post.author = _get_display_name(request.user)
+                if request.user.is_authenticated:
+                    post.author = _get_display_name(request.user)
+                else:
+                    post.author = "익명"
                 post.category = 'common'
                 post.save()
                 _save_post_images(post, images, 3)
-                if hasattr(request.user, "profile"):
+                if request.user.is_authenticated and hasattr(request.user, "profile"):
                     request.user.profile.points += 10
                     request.user.profile.save()
                 return redirect("board:post_detail", post_id=post.id)
