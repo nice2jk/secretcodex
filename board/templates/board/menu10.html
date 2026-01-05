@@ -87,31 +87,31 @@
           <div class="col-lg-10 col-xl-8">
             <ul class="nav nav-tabs mb-3" id="bestTab" role="tablist">
               <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend-tab-pane" type="button" role="tab" aria-controls="recommend-tab-pane" aria-selected="true">추천</button>
+                <button class="nav-link active" id="popular-tab" data-bs-toggle="tab" data-bs-target="#popular-tab-pane" type="button" role="tab" aria-controls="popular-tab-pane" aria-selected="true">인기모음</button>
               </li>
               <li class="nav-item" role="presentation">
-                <button class="nav-link" id="popular-tab" data-bs-toggle="tab" data-bs-target="#popular-tab-pane" type="button" role="tab" aria-controls="popular-tab-pane" aria-selected="false">인기모음</button>
+                <button class="nav-link" id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend-tab-pane" type="button" role="tab" aria-controls="recommend-tab-pane" aria-selected="false">추천</button>
               </li>
             </ul>
             <div class="tab-content mb-4" id="bestTabContent">
-              <div class="tab-pane fade show active" id="recommend-tab-pane" role="tabpanel" aria-labelledby="recommend-tab" tabindex="0">
+              <div class="tab-pane fade show active" id="popular-tab-pane" role="tabpanel" aria-labelledby="popular-tab" tabindex="0">
                 <div class="list-group shadow-sm">
-                  {% for post in recent_recommended %}
-                    <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action py-2">
+                  {% for post in recent_popular %}
+                    <a href="{{ post.url }}" class="list-group-item list-group-item-action py-2" target="_blank" rel="noopener">
                       <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                      <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
+                      <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
                     </a>
                   {% empty %}
                     <div class="list-group-item text-secondary">게시물이 없습니다.</div>
                   {% endfor %}
                 </div>
               </div>
-              <div class="tab-pane fade" id="popular-tab-pane" role="tabpanel" aria-labelledby="popular-tab" tabindex="0">
+              <div class="tab-pane fade" id="recommend-tab-pane" role="tabpanel" aria-labelledby="recommend-tab" tabindex="0">
                 <div class="list-group shadow-sm">
-                  {% for post in recent_popular %}
-                    <a href="{{ post.url }}" class="list-group-item list-group-item-action py-2" target="_blank" rel="noopener">
+                  {% for post in recent_recommended %}
+                    <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action py-2">
                       <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                      <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                      <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
                     </a>
                   {% empty %}
                     <div class="list-group-item text-secondary">게시물이 없습니다.</div>
