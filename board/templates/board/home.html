@@ -102,6 +102,19 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
+            <div class="p-4 bg-white rounded-4 border mb-4">
+              <h3 class="h5 mb-3"><a href="/menu6/" class="text-decoration-none text-dark">베스트야</a></h3>
+              <div class="list-group list-group-flush">
+                {% for post in recent_best|slice:":7" %}
+                  <a href="{{ post.url }}" class="list-group-item list-group-item-action px-0 border-0" target="_blank" rel="noopener">
+                    <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
+                    <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                  </a>
+                {% empty %}
+                  <div class="text-secondary small">게시물이 없습니다.</div>
+                {% endfor %}
+              </div>
+            </div>
             <div class="row g-3">
               <div class="col-md-4">
                 <div class="p-4 bg-white rounded-4 border h-100">
