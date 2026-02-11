@@ -116,7 +116,7 @@
               </div>
             </div>
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="p-4 bg-white rounded-4 border h-100">
                   <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="/menu4/" class="text-decoration-none text-dark">추천썰</a></h3>
                   <div class="list-group list-group-flush">
@@ -131,7 +131,7 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="p-4 bg-white rounded-4 border h-100">
                   <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="/popular/" class="text-decoration-none text-dark">인기모음</a></h3>
                   <div class="list-group list-group-flush">
@@ -146,12 +146,27 @@
                   </div>
                 </div>
               </div>
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <div class="p-4 bg-white rounded-4 border h-100">
                   <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="/menu3/" class="text-decoration-none text-dark">코인뉴스</a></h3>
                   <div class="list-group list-group-flush">
                     {% for post in recent_links %}
                       <a href="/menu3/" class="list-group-item list-group-item-action px-0 border-0">
+                        <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
+                        <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                      </a>
+                    {% empty %}
+                      <div class="text-secondary small">게시물이 없습니다.</div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="p-4 bg-white rounded-4 border h-100">
+                  <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="{% url 'board:ai_list' %}" class="text-decoration-none text-dark">AI뉴스</a></h3>
+                  <div class="list-group list-group-flush">
+                    {% for post in recent_ai_news %}
+                      <a href="{% url 'board:ai_list' %}" class="list-group-item list-group-item-action px-0 border-0">
                         <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
                         <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.likes.count }} · {{ post.created_at|date:"Y-m-d" }}</div>
                       </a>
