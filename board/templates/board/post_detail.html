@@ -173,18 +173,18 @@
 
         <div class="row g-2 mt-3">
           <div class="col-6">
-            {% if previous_post %}
-              <a href="{% if post.category == 'secret' %}/menu5/{{ previous_post.id }}/{% else %}/board/{{ previous_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100">
-                <div class="small text-secondary mb-1"><i class="bi bi-chevron-left"></i> 이전글</div>
-                <div class="text-dark text-truncate fw-semibold">{{ previous_post.title }}</div>
+            {% if next_post %}
+              <a href="{% if post.category == 'secret' %}/menu5/{{ next_post.id }}/{% else %}/board/{{ next_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100">
+                <div class="small text-secondary mb-1"><i class="bi bi-chevron-left"></i> 다음글</div>
+                <div class="text-dark text-truncate fw-semibold">{{ next_post.title }}</div>
               </a>
             {% endif %}
           </div>
           <div class="col-6">
-            {% if next_post %}
-              <a href="{% if post.category == 'secret' %}/menu5/{{ next_post.id }}/{% else %}/board/{{ next_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100 text-end">
-                <div class="small text-secondary mb-1">다음글 <i class="bi bi-chevron-right"></i></div>
-                <div class="text-dark text-truncate fw-semibold">{{ next_post.title }}</div>
+            {% if previous_post %}
+              <a href="{% if post.category == 'secret' %}/menu5/{{ previous_post.id }}/{% else %}/board/{{ previous_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100 text-end">
+                <div class="small text-secondary mb-1">이전글 <i class="bi bi-chevron-right"></i></div>
+                <div class="text-dark text-truncate fw-semibold">{{ previous_post.title }}</div>
               </a>
             {% endif %}
           </div>
