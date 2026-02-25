@@ -125,10 +125,14 @@ def post_detail(request, post_id):
     else:
         form = CommentForm()
     is_author = request.user.is_authenticated and _get_display_name(request.user) == post.author
+
+    previous_post = Post.objects.filter(category=post.category, id__lt=post.id).order_by('-id').first()
+    next_post = Post.objects.filter(category=post.category, id__gt=post.id).order_by('id').first()
+
     return render(
         request,
         "board/post_detail.html",
-        {"post": post, "form": form, "is_author": is_author},
+        {"post": post, "form": form, "is_author": is_author, "previous_post": previous_post, "next_post": next_post},
     )
 
 
@@ -503,10 +507,14 @@ def secret_detail(request, post_id):
     else:
         form = CommentForm()
     is_author = request.user.is_authenticated and _get_display_name(request.user) == post.author
+
+    previous_post = Post.objects.filter(category=post.category, id__lt=post.id).order_by('-id').first()
+    next_post = Post.objects.filter(category=post.category, id__gt=post.id).order_by('id').first()
+
     return render(
         request,
         "board/post_detail.html",
-        {"post": post, "form": form, "is_author": is_author},
+        {"post": post, "form": form, "is_author": is_author, "previous_post": previous_post, "next_post": next_post},
     )
 
 @login_required
