@@ -613,6 +613,21 @@ def menu7_create(request):
         form = LinkPostForm(initial={'category': 'xart'})
     return render(request, "board/link_form.html", {"form": form})
 
+@csrf_exempt
+@require_POST
+def menu7_create_api(request):
+    try:
+        data = json.loads(request.body)
+        data['category'] = 'xart'
+        form = LinkPostForm(data)
+        if form.is_valid():
+            link = form.save()
+            return JsonResponse({'message': 'success', 'id': link.id}, status=201)
+        else:
+            return JsonResponse({'errors': form.errors}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
 def menu8(request):
     links = LinkPost.objects.filter(category='movie').order_by("-id")
     query = request.GET.get("q", "").strip()

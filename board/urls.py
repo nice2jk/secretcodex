@@ -35,6 +35,7 @@ urlpatterns = [
     path("menu6/new/", views.link_create, name="link_create_best"),
     path("menu7/", views.menu7, name="menu7"),
     path("menu7/new/", views.menu7_create, name="menu7_create"),
+    path("api/menu7/new/", views.menu7_create_api, name="menu7_create_api"),
     path("menu8/", views.menu8, name="menu8"),
     path("menu8/new/", views.menu8_create, name="menu8_create"),
     path("menu9/", views.menu9, name="menu9"),
