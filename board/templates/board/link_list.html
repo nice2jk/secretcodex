@@ -85,7 +85,7 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
-            <ul class="nav nav-tabs mb-3" id="bestTab" role="tablist">
+            <ul class="nav nav-tabs mb-3 small" id="bestTab" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend-tab-pane" type="button" role="tab" aria-controls="recommend-tab-pane" aria-selected="true">추천</button>
               </li>
@@ -98,11 +98,11 @@
                 <div class="list-group shadow-sm">
                   {% for post in recent_recommended %}
                     <a href="/board/{{ post.id }}/" class="list-group-item list-group-item-action py-2">
-                      <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                      <div class="text-secondary small">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
+                      <div class="fw-semibold text-dark text-truncate small">{{ post.title }}</div>
+                      <div class="text-secondary" style="font-size: 0.75rem;">{{ post.author }} · 좋아요 {{ post.like_count }} · 댓글 {{ post.comments.count }}</div>
                     </a>
                   {% empty %}
-                    <div class="list-group-item text-secondary">게시물이 없습니다.</div>
+                    <div class="list-group-item text-secondary small">게시물이 없습니다.</div>
                   {% endfor %}
                 </div>
               </div>
@@ -110,11 +110,11 @@
                 <div class="list-group shadow-sm">
                   {% for post in recent_popular %}
                     <a href="{{ post.url }}" class="list-group-item list-group-item-action py-2" target="_blank" rel="noopener">
-                      <div class="fw-semibold text-dark text-truncate">{{ post.title }}</div>
-                      <div class="text-secondary small">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
+                      <div class="fw-semibold text-dark text-truncate small">{{ post.title }}</div>
+                      <div class="text-secondary" style="font-size: 0.75rem;">{{ post.author }} · {{ post.created_at|date:"Y-m-d" }}</div>
                     </a>
                   {% empty %}
-                    <div class="list-group-item text-secondary">게시물이 없습니다.</div>
+                    <div class="list-group-item text-secondary small">게시물이 없습니다.</div>
                   {% endfor %}
                 </div>
               </div>
