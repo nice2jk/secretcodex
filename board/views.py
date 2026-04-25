@@ -457,9 +457,12 @@ def menu5(request):
         else:
             post.is_liked = False
 
-    recent_recommended = Post.objects.filter(category='common').annotate(like_count=Count('likes')).filter(like_count__gt=0).order_by("-like_count", "-id")[:5]
-    target_categories = ['best', 'xart', 'movie', 'itnews', 'stock']
-    recent_popular = LinkPost.objects.filter(category__in=target_categories, is_recommended=True).order_by("-created_at")[:5]
+    recent_popular = (
+        Post.objects.filter(category='secret')
+        .annotate(like_count=Count('likes'))
+        .filter(like_count__gt=0)
+        .order_by("-like_count", "-id")[:5]
+    )
 
     return render(
         request,
@@ -467,7 +470,6 @@ def menu5(request):
         {
             "page_obj": page_obj,
             "query": query,
-            "recent_recommended": recent_recommended,
             "recent_popular": recent_popular,
         },
     )
