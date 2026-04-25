@@ -72,9 +72,7 @@
                 </ul>
               </li>
               <li class="nav-item"><a class="nav-link" href="/matches/">해외축구일정</a></li>
-              {% if user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link {% if post.category == 'secret' %}active{% endif %}" href="/menu5/">비밀</a></li>
-              {% endif %}
+              <li class="nav-item"><a class="nav-link {% if post.category == 'secret' %}active{% endif %}" href="/menu5/">Nada</a></li>
             </ul>
           </div>
         </nav>
@@ -85,110 +83,114 @@
 
     <main class="py-5">
       <div class="container">
-        <div class="mb-4">
-          <h1 class="h3 mb-0 fw-bold">{{ post.title }}</h1>
-        </div>
-
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <div class="text-secondary small mb-2">
-              {{ post.created_at|date:"Y-m-d H:i" }}{% if post.category != 'secret' %} | 작성자 {{ post.author }}{% endif %}
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-8">
+            <div class="mb-4">
+              <h1 class="h3 mb-0 fw-bold">{{ post.title }}</h1>
             </div>
-            {% if post.images.exists %}
-              <div class="mb-3">
-                {% for image in post.images.all %}
-                  <img src="{{ image.image.url }}" alt="post image" class="img-fluid rounded mb-2">
-                {% endfor %}
-              </div>
-            {% endif %}
-            <p class="mb-0">{{ post.content|urlize|linebreaksbr }}</p>
-            <div class="d-flex justify-content-center mt-4">
-              <button class="btn btn-outline-primary d-flex align-items-center gap-2 px-3" {% if user.is_authenticated %}onclick="toggleLike(this, {{ post.id }})"{% else %}onclick="alert('로그인이 필요합니다.'); window.location.href='{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}'"{% endif %}>
-                <i class="bi {% if user in post.likes.all %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
-                <span class="fw-bold">{{ post.likes.count }}</span>
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            {% if is_author %}
-              {% if post.category == 'secret' %}
-                <a class="btn btn-outline-secondary me-2" href="{% url 'board:secret_edit' post.id %}">수정</a>
-                <form method="post" action="{% url 'board:secret_delete' post.id %}" class="d-inline">
-              {% else %}
-                <a class="btn btn-outline-secondary me-2" href="{% url 'board:post_edit' post.id %}">수정</a>
-                <form method="post" action="{% url 'board:post_delete' post.id %}" class="d-inline">
-              {% endif %}
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">삭제</button>
-              </form>
-            {% endif %}
-          </div>
-          <div>
-            {% if post.category == 'secret' %}
-              <a class="btn btn-outline-secondary" href="/menu5/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
-            {% else %}
-              <a class="btn btn-dark me-2" href="/board/new/">글쓰기</a>
-              <a class="btn btn-outline-secondary" href="/board/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h2 class="h5 mb-3">댓글</h2>
-            {% if user.is_authenticated %}
-              <form method="post" class="mb-4" novalidate>
-                {% csrf_token %}
-                <div class="mb-3">
-                  <label class="form-label">댓글 내용</label>
-                  {{ form.content }}
+            <div class="card shadow-sm mb-4">
+              <div class="card-body">
+                <div class="text-secondary small mb-2">
+                  {{ post.created_at|date:"Y-m-d H:i" }}{% if post.category != 'secret' %} | 작성자 {{ post.author }}{% endif %}
                 </div>
-                <div class="d-flex justify-content-end">
-                  <button type="submit" class="btn btn-dark">댓글 등록</button>
-                </div>
-              </form>
-            {% else %}
-              <div class="alert alert-light border mb-4">
-                댓글 등록은 로그인 후 가능합니다.
-                <a href="{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}" class="text-decoration-none">로그인</a>
-              </div>
-            {% endif %}
-
-            <div class="list-group">
-              {% for comment in post.comments.all|dictsortreversed:"created_at" %}
-                <div class="list-group-item">
-                  <div class="d-flex justify-content-between text-secondary small mb-1">
-                    <span>{% if post.category != 'secret' %}{{ comment.author }}{% endif %}</span>
-                    <span>{{ comment.created_at|date:"Y-m-d H:i" }}</span>
+                {% if post.images.exists %}
+                  <div class="mb-3">
+                    {% for image in post.images.all %}
+                      <img src="{{ image.image.url }}" alt="post image" class="img-fluid rounded mb-2">
+                    {% endfor %}
                   </div>
-                  <div>{{ comment.content|linebreaksbr }}</div>
+                {% endif %}
+                <p class="mb-0">{{ post.content|urlize|linebreaksbr }}</p>
+                <div class="d-flex justify-content-center mt-4">
+                  <button class="btn btn-outline-primary d-flex align-items-center gap-2 px-3" {% if user.is_authenticated %}onclick="toggleLike(this, {{ post.id }})"{% else %}onclick="alert('로그인이 필요합니다.'); window.location.href='{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}'"{% endif %}>
+                    <i class="bi {% if user in post.likes.all %}bi-hand-thumbs-up-fill{% else %}bi-hand-thumbs-up{% endif %}"></i>
+                    <span class="fw-bold">{{ post.likes.count }}</span>
+                  </button>
                 </div>
-              {% empty %}
-                <div class="list-group-item text-secondary">댓글이 없습니다.</div>
-              {% endfor %}
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div class="row g-2 mt-3">
-          <div class="col-6">
-            {% if next_post %}
-              <a href="{% if post.category == 'secret' %}/menu5/{{ next_post.id }}/{% else %}/board/{{ next_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100">
-                <div class="small text-secondary mb-1"><i class="bi bi-chevron-left"></i> 다음글</div>
-                <div class="text-dark text-truncate fw-semibold">{{ next_post.title }}</div>
-              </a>
-            {% endif %}
-          </div>
-          <div class="col-6">
-            {% if previous_post %}
-              <a href="{% if post.category == 'secret' %}/menu5/{{ previous_post.id }}/{% else %}/board/{{ previous_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100 text-end">
-                <div class="small text-secondary mb-1">이전글 <i class="bi bi-chevron-right"></i></div>
-                <div class="text-dark text-truncate fw-semibold">{{ previous_post.title }}</div>
-              </a>
-            {% endif %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div>
+                {% if is_author %}
+                  {% if post.category == 'secret' %}
+                    <a class="btn btn-outline-secondary me-2" href="{% url 'board:secret_edit' post.id %}">수정</a>
+                    <form method="post" action="{% url 'board:secret_delete' post.id %}" class="d-inline">
+                  {% else %}
+                    <a class="btn btn-outline-secondary me-2" href="{% url 'board:post_edit' post.id %}">수정</a>
+                    <form method="post" action="{% url 'board:post_delete' post.id %}" class="d-inline">
+                  {% endif %}
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">삭제</button>
+                  </form>
+                {% endif %}
+              </div>
+              <div>
+                {% if post.category == 'secret' %}
+                  <a class="btn btn-outline-secondary" href="/menu5/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
+                {% else %}
+                  <a class="btn btn-dark me-2" href="/board/new/">글쓰기</a>
+                  <a class="btn btn-outline-secondary" href="/board/?page={{ request.GET.page|default:1 }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}">목록</a>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h2 class="h5 mb-3">댓글</h2>
+                {% if user.is_authenticated %}
+                  <form method="post" class="mb-4" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-3">
+                      <label class="form-label">댓글 내용</label>
+                      {{ form.content }}
+                    </div>
+                    <div class="d-flex justify-content-end">
+                      <button type="submit" class="btn btn-dark">댓글 등록</button>
+                    </div>
+                  </form>
+                {% else %}
+                  <div class="alert alert-light border mb-4">
+                    댓글 등록은 로그인 후 가능합니다.
+                    <a href="{% url 'board:login' %}?next={{ request.get_full_path|urlencode }}" class="text-decoration-none">로그인</a>
+                  </div>
+                {% endif %}
+
+                <div class="list-group">
+                  {% for comment in post.comments.all|dictsortreversed:"created_at" %}
+                    <div class="list-group-item">
+                      <div class="d-flex justify-content-between text-secondary small mb-1">
+                        <span>{% if post.category != 'secret' %}{{ comment.author }}{% endif %}</span>
+                        <span>{{ comment.created_at|date:"Y-m-d H:i" }}</span>
+                      </div>
+                      <div>{{ comment.content|linebreaksbr }}</div>
+                    </div>
+                  {% empty %}
+                    <div class="list-group-item text-secondary">댓글이 없습니다.</div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-2 mt-3">
+              <div class="col-6">
+                {% if next_post %}
+                  <a href="{% if post.category == 'secret' %}/menu5/{{ next_post.id }}/{% else %}/board/{{ next_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100">
+                    <div class="small text-secondary mb-1"><i class="bi bi-chevron-left"></i> 다음글</div>
+                    <div class="text-dark text-truncate fw-semibold">{{ next_post.title }}</div>
+                  </a>
+                {% endif %}
+              </div>
+              <div class="col-6">
+                {% if previous_post %}
+                  <a href="{% if post.category == 'secret' %}/menu5/{{ previous_post.id }}/{% else %}/board/{{ previous_post.id }}/{% endif %}" class="d-block p-3 bg-white border rounded text-decoration-none shadow-sm h-100 text-end">
+                    <div class="small text-secondary mb-1">이전글 <i class="bi bi-chevron-right"></i></div>
+                    <div class="text-dark text-truncate fw-semibold">{{ previous_post.title }}</div>
+                  </a>
+                {% endif %}
+              </div>
+            </div>
           </div>
         </div>
       </div>

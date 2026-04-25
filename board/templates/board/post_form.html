@@ -1,4 +1,4 @@
-﻿﻿{% load static %}
+﻿{% load static %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -68,9 +68,7 @@
                 </ul>
               </li>
               <li class="nav-item"><a class="nav-link" href="/matches/">해외축구일정</a></li>
-              {% if user.is_authenticated %}
-              <li class="nav-item"><a class="nav-link {% if '/menu5/' in request.path %}active{% endif %}" href="/menu5/">비밀</a></li>
-              {% endif %}
+              <li class="nav-item"><a class="nav-link {% if '/menu5/' in request.path %}active{% endif %}" href="/menu5/">Nada</a></li>
             </ul>
           </div>
         </nav>
@@ -81,64 +79,68 @@
 
     <main class="py-5">
       <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h1 class="h3 mb-0 fw-bold">{% if is_edit %}게시물 수정{% else %}게시물 작성{% endif %}</h1>
-          {% if '/menu5/' in request.path %}
-            <a class="btn btn-outline-secondary" href="/menu5/">목록</a>
-          {% else %}
-            <a class="btn btn-outline-secondary" href="/board/">목록</a>
-          {% endif %}
-        </div>
-
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <form method="post" enctype="multipart/form-data" novalidate>
-              {% csrf_token %}
-              <div class="mb-3">
-                <label class="form-label">제목</label>
-                {{ form.title }}
-              </div>
-              <div class="mb-3">
-                <label class="form-label">내용</label>
-                {{ form.content }}
-              </div>
-              {% if is_edit and images %}
-                <div class="mb-3">
-                  <label class="form-label">기존 이미지</label>
-                  <div class="d-grid gap-2">
-                    {% for image in images %}
-                      <div class="d-flex align-items-center gap-2">
-                        <img src="{{ image.image.url }}" alt="post image" class="rounded" style="height: 60px; width: auto;">
-                        <button type="submit" form="delete-image-{{ image.id }}" class="btn btn-outline-danger btn-sm">-</button>
-                      </div>
-                    {% endfor %}
-                  </div>
-                </div>
-              {% endif %}
-              {% if remaining_slots is not None %}
-              <div class="mb-3">
-                <label class="form-label">이미지 (최대 3장)</label>
-                <div class="d-grid gap-2">
-                  {% for _ in remaining_slots %}
-                    <input class="form-control" type="file" name="images" accept="image/*">
-                  {% endfor %}
-                </div>
-              </div>
-              {% endif %}
-              <button type="submit" class="btn btn-dark">{% if is_edit %}수정{% else %}등록{% endif %}</button>
+        <div class="row justify-content-center">
+          <div class="col-lg-10 col-xl-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h1 class="h3 mb-0 fw-bold">{% if is_edit %}게시물 수정{% else %}게시물 작성{% endif %}</h1>
               {% if '/menu5/' in request.path %}
-                <a class="btn btn-link" href="/menu5/">취소</a>
+                <a class="btn btn-outline-secondary" href="/menu5/">목록</a>
               {% else %}
-                <a class="btn btn-link" href="/board/">취소</a>
+                <a class="btn btn-outline-secondary" href="/board/">목록</a>
               {% endif %}
-            </form>
-            {% if is_edit and images %}
-              {% for image in images %}
-                <form id="delete-image-{{ image.id }}" method="post" action="{% url 'board:post_image_delete' post.id image.id %}" class="d-none">
+            </div>
+
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
                   {% csrf_token %}
+                  <div class="mb-3">
+                    <label class="form-label">제목</label>
+                    {{ form.title }}
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">내용</label>
+                    {{ form.content }}
+                  </div>
+                  {% if is_edit and images %}
+                    <div class="mb-3">
+                      <label class="form-label">기존 이미지</label>
+                      <div class="d-grid gap-2">
+                        {% for image in images %}
+                          <div class="d-flex align-items-center gap-2">
+                            <img src="{{ image.image.url }}" alt="post image" class="rounded" style="height: 60px; width: auto;">
+                            <button type="submit" form="delete-image-{{ image.id }}" class="btn btn-outline-danger btn-sm">-</button>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </div>
+                  {% endif %}
+                  {% if remaining_slots is not None %}
+                  <div class="mb-3">
+                    <label class="form-label">이미지 (최대 3장)</label>
+                    <div class="d-grid gap-2">
+                      {% for _ in remaining_slots %}
+                        <input class="form-control" type="file" name="images" accept="image/*">
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  <button type="submit" class="btn btn-dark">{% if is_edit %}수정{% else %}등록{% endif %}</button>
+                  {% if '/menu5/' in request.path %}
+                    <a class="btn btn-link" href="/menu5/">취소</a>
+                  {% else %}
+                    <a class="btn btn-link" href="/board/">취소</a>
+                  {% endif %}
                 </form>
-              {% endfor %}
-            {% endif %}
+                {% if is_edit and images %}
+                  {% for image in images %}
+                    <form id="delete-image-{{ image.id }}" method="post" action="{% url 'board:post_image_delete' post.id image.id %}" class="d-none">
+                      {% csrf_token %}
+                    </form>
+                  {% endfor %}
+                {% endif %}
+              </div>
+            </div>
           </div>
         </div>
       </div>
