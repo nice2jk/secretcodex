@@ -176,10 +176,14 @@ def post_edit(request, post_id):
 def post_image_delete(request, post_id, image_id):
     post = get_object_or_404(Post, id=post_id)
     if _get_display_name(request.user) != post.author:
+        if post.category == "secret":
+            return redirect("board:secret_detail", post_id=post.id)
         return redirect("board:post_detail", post_id=post.id)
     image = get_object_or_404(PostImage, id=image_id, post=post)
     if request.method == "POST":
         image.delete()
+    if post.category == "secret":
+        return redirect("board:secret_edit", post_id=post.id)
     return redirect("board:post_edit", post_id=post.id)
 
 
@@ -473,17 +477,26 @@ def secret_create(request):
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
-            post = form.save(commit=False)
-            post.author = _get_display_name(request.user)
-            post.category = 'secret'
-            post.save()
-            if hasattr(request.user, "profile"):
-                request.user.profile.points += 10
-                request.user.profile.save()
-            return redirect("board:secret_detail", post_id=post.id)
+            images = request.FILES.getlist("images")
+            if len(images) > 3:
+                form.add_error(None, "이미지는 최대 3장까지 업로드할 수 있습니다.")
+            else:
+                post = form.save(commit=False)
+                post.author = _get_display_name(request.user)
+                post.category = 'secret'
+                post.save()
+                _save_post_images(post, images, 3)
+                if hasattr(request.user, "profile"):
+                    request.user.profile.points += 10
+                    request.user.profile.save()
+                return redirect("board:secret_detail", post_id=post.id)
     else:
         form = PostForm()
-    return render(request, "board/post_form.html", {"form": form})
+    return render(
+        request,
+        "board/post_form.html",
+        {"form": form, "remaining_slots": list(range(3))},
+    )
 
 @login_required
 def secret_detail(request, post_id):
@@ -525,11 +538,32 @@ def secret_edit(request, post_id):
     if request.method == "POST":
         form = PostForm(request.POST, instance=post)
         if form.is_valid():
-            form.save()
-            return redirect("board:secret_detail", post_id=post.id)
+            images = request.FILES.getlist("images")
+            existing_count = post.images.count()
+            remaining = max(0, 3 - existing_count)
+            if len(images) > remaining:
+                form.add_error(
+                    None,
+                    f"이미지는 최대 3장까지 업로드할 수 있습니다. 현재 {existing_count}장 등록됨.",
+                )
+            else:
+                form.save()
+                _save_post_images(post, images, remaining)
+                return redirect("board:secret_detail", post_id=post.id)
     else:
         form = PostForm(instance=post)
-    return render(request, "board/post_form.html", {"form": form, "is_edit": True, "post": post})
+    remaining = max(0, 3 - post.images.count())
+    return render(
+        request,
+        "board/post_form.html",
+        {
+            "form": form,
+            "is_edit": True,
+            "post": post,
+            "images": post.images.all(),
+            "remaining_slots": list(range(remaining)),
+        },
+    )
 
 @login_required
 def secret_delete(request, post_id):
