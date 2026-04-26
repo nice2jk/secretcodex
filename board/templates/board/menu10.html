@@ -149,9 +149,18 @@
                       </button>
                     </div>
                   </div>
-                  <div class="d-flex justify-content-between text-secondary small">
-                    <span>{{ post.author }}</span>
-                    <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
+                  <div class="d-flex justify-content-between align-items-center text-secondary small">
+                    <span>{{ post.author }} | {{ post.created_at|date:"Y-m-d H:i" }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-link btn-sm p-0 text-dark text-decoration-none fw-bold"
+                      data-share-title="{{ post.title }}"
+                      data-share-url="{{ post.url }}"
+                      onclick="openShareModal(this)"
+                      aria-label="공유하기"
+                    >
+                      <i class="bi bi-share-fill fs-5"></i>
+                    </button>
                   </div>
                 </div>
               {% empty %}
@@ -224,12 +233,115 @@
       </div>
     </main>
 
+    <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="shareModalLabel">공유하기</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="shareLinkInput" class="form-label small text-secondary">공유 링크</label>
+              <input type="text" class="form-control" id="shareLinkInput" readonly>
+            </div>
+            <div class="d-grid gap-2">
+              <button type="button" class="btn btn-dark" onclick="copyShareLink()">링크 복사</button>
+              <button type="button" class="btn btn-warning" onclick="shareToKakao()">카카오톡으로 보내기</button>
+            </div>
+            <div id="shareHelpText" class="small text-secondary mt-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
     <script>
+      let shareModal;
+      let currentShareTitle = '';
+      let currentShareUrl = '';
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const shareModalElement = document.getElementById('shareModal');
+        if (shareModalElement) {
+          shareModal = new bootstrap.Modal(shareModalElement);
+        }
+      });
+
+      function openShareModal(button) {
+        currentShareTitle = button.dataset.shareTitle || '';
+        currentShareUrl = button.dataset.shareUrl || window.location.href;
+
+        document.getElementById('shareLinkInput').value = currentShareUrl;
+        document.getElementById('shareHelpText').textContent = '';
+
+        if (shareModal) {
+          shareModal.show();
+        }
+      }
+
+      async function copyShareLink() {
+        const input = document.getElementById('shareLinkInput');
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(input.value);
+          } else {
+            input.focus();
+            input.select();
+            document.execCommand('copy');
+          }
+          document.getElementById('shareHelpText').textContent = '링크를 복사했습니다.';
+        } catch (error) {
+          document.getElementById('shareHelpText').textContent = '복사에 실패했습니다. 링크를 직접 복사해 주세요.';
+        }
+      }
+
+      async function shareToKakao() {
+        const helpText = document.getElementById('shareHelpText');
+        const shareText = currentShareTitle ? `${currentShareTitle}\n${currentShareUrl}` : currentShareUrl;
+        const isAndroid = /Android/i.test(navigator.userAgent || '');
+        const isChrome = /Chrome/i.test(navigator.userAgent || '') || /CriOS/i.test(navigator.userAgent || '');
+
+        if (navigator.share && window.isSecureContext) {
+          try {
+            await navigator.share({
+              title: currentShareTitle,
+              text: currentShareTitle,
+              url: currentShareUrl
+            });
+            helpText.textContent = '공유 시트를 열었습니다. 카카오톡을 선택해 전달해 주세요.';
+            return;
+          } catch (error) {
+            if (error && error.name === 'AbortError') {
+              helpText.textContent = '';
+              return;
+            }
+          }
+        }
+
+        if (isAndroid && isChrome) {
+          const intentText = encodeURIComponent(shareText);
+          const fallbackUrl = encodeURIComponent(currentShareUrl);
+          const intentUrl = `intent://share/#Intent;package=com.kakao.talk;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT=${intentText};S.browser_fallback_url=${fallbackUrl};end`;
+
+          helpText.textContent = '카카오톡 앱을 여는 중입니다.';
+          window.location.href = intentUrl;
+          return;
+        }
+
+        if (!window.isSecureContext) {
+          helpText.textContent = '현재 페이지가 HTTPS 보안 문맥이 아니라 브라우저 공유 기능을 쓸 수 없습니다.';
+          return;
+        }
+
+        helpText.textContent = '이 환경에서는 카카오톡 공유를 직접 열 수 없습니다. 안드로이드 크롬 또는 HTTPS 환경에서 다시 시도해 주세요.';
+      }
+
       function toggleLike(btn, postId) {
         fetch('/link/' + postId + '/like/', {
           method: 'POST',
