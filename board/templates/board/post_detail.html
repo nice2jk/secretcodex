@@ -1,4 +1,4 @@
-﻿{% load static %}
+﻿{% load static board_extras %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -101,7 +101,7 @@
                     {% endfor %}
                   </div>
                 {% endif %}
-                <p class="mb-0">{{ post.content|urlize|linebreaksbr }}</p>
+                <div class="mb-0">{{ post.content|render_post_content }}</div>
                 <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
                   <button
                     type="button"
