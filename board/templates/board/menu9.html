@@ -140,7 +140,7 @@
                 <div class="list-group-item py-2">
                   <div class="d-flex justify-content-between align-items-center mb-1">
                     <div>
-                      <span class="text-secondary fw-bold me-2">{{ post.id }}</span>
+                      <span class="text-secondary fw-bold me-2">{{ post.author }}</span>
                       <a href="{{ post.url }}" class="fw-semibold text-decoration-none text-dark post-title" target="_blank" rel="noopener">{{ post.title }}</a>
                     </div>
                     <div class="d-flex align-items-center">
@@ -149,17 +149,17 @@
                       </button>
                     </div>
                   </div>
-                  <div class="d-flex justify-content-between align-items-center text-secondary small">
-                    <span>{{ post.author }} | {{ post.created_at|date:"Y-m-d H:i" }}</span>
+                  <div class="d-flex align-items-center gap-2 text-secondary small">
+                    <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
                     <button
                       type="button"
-                      class="btn btn-link btn-sm p-0 text-dark text-decoration-none fw-bold"
+                      class="btn btn-link p-0 text-secondary text-decoration-none d-flex align-items-center"
                       data-share-title="{{ post.title }}"
                       data-share-url="{{ post.url }}"
                       onclick="openShareModal(this)"
                       aria-label="공유하기"
                     >
-                      <i class="bi bi-share-fill fs-5"></i>
+                      <i class="bi bi-share-fill"></i>
                     </button>
                   </div>
                 </div>
