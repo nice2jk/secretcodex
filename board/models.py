@@ -59,6 +59,7 @@ class LinkPost(models.Model):
         ('xart', '조공모음'),
         ('movie', '영화소식'),
         ('itnews', 'IT 뉴스'),
+        ('ground', '부동산'),
         ('stock', '주식소문'),
     ]
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='best', verbose_name='카테고리')

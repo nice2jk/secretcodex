@@ -58,13 +58,14 @@
               
               <li class="nav-item"><a class="nav-link {% if '/popular/' in request.path %}active{% endif %}" href="/popular/">인기모음</a></li>
               <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle {% if '/menu6/' in request.path or '/menu7/' in request.path or '/menu8/' in request.path or '/menu9/' in request.path or '/menu10/' in request.path %}active{% endif %}" href="/menu6/" role="button">
+                <a class="nav-link dropdown-toggle {% if '/menu6/' in request.path or '/menu7/' in request.path or '/menu8/' in request.path or '/menu9/' in request.path or '/menu11/' in request.path or '/menu10/' in request.path %}active{% endif %}" href="/menu6/" role="button">
                   베스트야
                 </a>
                 <ul class="dropdown-menu">
                   <li><a class="dropdown-item" href="/menu7/">해외축구</a></li>
                   <li><a class="dropdown-item" href="/menu8/">영화소식</a></li>
                   <li><a class="dropdown-item" href="/menu9/">IT 뉴스</a></li>
+                  <li><a class="dropdown-item" href="/menu11/">부동산</a></li>
                   <li><a class="dropdown-item" href="/menu10/">주식소문</a></li>
                 </ul>
               </li>
@@ -98,6 +99,8 @@
                 <a class="btn btn-outline-secondary" href="/menu8/">목록</a>
               {% elif '/menu9/' in request.path %}
                 <a class="btn btn-outline-secondary" href="/menu9/">목록</a>
+              {% elif '/menu11/' in request.path %}
+                <a class="btn btn-outline-secondary" href="/menu11/">목록</a>
               {% elif '/menu10/' in request.path %}
                 <a class="btn btn-outline-secondary" href="/menu10/">목록</a>
               {% elif '/ai-news/' in request.path %}
@@ -118,6 +121,7 @@
                   {% if '/menu7/' in request.path %}<input type="hidden" name="category" value="tribute">{% endif %}
                   {% if '/menu8/' in request.path %}<input type="hidden" name="category" value="movie">{% endif %}
                   {% if '/menu9/' in request.path %}<input type="hidden" name="category" value="itnews">{% endif %}
+                  {% if '/menu11/' in request.path %}<input type="hidden" name="category" value="ground">{% endif %}
                   {% if '/menu10/' in request.path %}<input type="hidden" name="category" value="stock">{% endif %}
 
                   {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
@@ -173,6 +177,8 @@
                     <a class="btn btn-link" href="/menu8/">취소</a>
                   {% elif '/menu9/' in request.path %}
                     <a class="btn btn-link" href="/menu9/">취소</a>
+                  {% elif '/menu11/' in request.path %}
+                    <a class="btn btn-link" href="/menu11/">취소</a>
                   {% elif '/menu10/' in request.path %}
                     <a class="btn btn-link" href="/menu10/">취소</a>
                   {% elif '/ai-news/' in request.path %}
