@@ -95,8 +95,7 @@ class SoccerMatch(models.Model):
     league = models.CharField(max_length=20)
     home_team = models.CharField(max_length=100)
     away_team = models.CharField(max_length=100)
-    home_score = models.PositiveSmallIntegerField(null=True, blank=True)
-    away_score = models.PositiveSmallIntegerField(null=True, blank=True)
+    score = models.CharField(max_length=20, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

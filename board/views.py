@@ -8,7 +8,6 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Count, Q
-from django.db.models.functions import ExtractYear
 from django.utils.crypto import get_random_string
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm, ThreadPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
@@ -893,11 +892,18 @@ def profile(request):
     )
 
 def match_list(request):
-    matches = SoccerMatch.objects.annotate(year=ExtractYear('match_date')).order_by('-year', '-round_num', '-match_date')
-    paginator = Paginator(matches, 20)
-    page_number = request.GET.get("page")
-    page_obj = paginator.get_page(page_number)
+    scheduled_matches = SoccerMatch.objects.filter(Q(score__isnull=True) | Q(score='')).order_by('match_id')
+    result_matches = SoccerMatch.objects.exclude(score__isnull=True).exclude(score='').order_by('-match_id')
+    schedule_paginator = Paginator(scheduled_matches, 20)
+    result_paginator = Paginator(result_matches, 20)
+    schedule_page_obj = schedule_paginator.get_page(request.GET.get("schedule_page"))
+    result_page_obj = result_paginator.get_page(request.GET.get("result_page"))
+    active_tab = request.GET.get("tab")
+    if active_tab not in ["schedule", "results"]:
+        active_tab = "schedule"
     context = {
-        'page_obj': page_obj,
+        'schedule_page_obj': schedule_page_obj,
+        'result_page_obj': result_page_obj,
+        'active_tab': active_tab,
     }
     return render(request, 'board/match_list.html', context)
