@@ -111,11 +111,12 @@
                       </button>
                     </div>
                   </div>
-                  <div class="d-flex align-items-center gap-2 text-secondary small">
+                  <div class="d-flex justify-content-between align-items-center text-secondary small">
                     <span>{{ post.created_at|date:"Y-m-d H:i" }}</span>
                     <button
                       type="button"
                       class="btn btn-link p-0 text-secondary text-decoration-none d-flex align-items-center"
+                      style="font-size: 0.75rem;"
                       data-share-title="{{ post.title }}"
                       data-share-url="{{ post.url }}"
                       onclick="openShareModal(this)"
