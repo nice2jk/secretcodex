@@ -1,0 +1,15 @@
+{% url 'board:ai_list' as ai_list_url %}
+<div class="row g-1 mb-1">
+  <div class="col"><a href="/board/" class="btn {% if request.path == '/board/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">썰게시판</a></div>
+  <div class="col"><a href="/menu3/" class="btn {% if request.path == '/menu3/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">코인뉴스</a></div>
+  <div class="col"><a href="{{ ai_list_url }}" class="btn {% if request.path == ai_list_url %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">AI뉴스</a></div>
+  <div class="col"><a href="/menu6/" class="btn {% if request.path == '/menu6/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">베스트야</a></div>
+  <div class="col"><a href="/menu5/" class="btn {% if request.path == '/menu5/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">Nada</a></div>
+</div>
+<div class="row g-1 mb-4">
+  <div class="col"><a href="/menu7/" class="btn {% if request.path == '/menu7/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">해외축구</a></div>
+  <div class="col"><a href="/menu8/" class="btn {% if request.path == '/menu8/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">영화소식</a></div>
+  <div class="col"><a href="/menu9/" class="btn {% if request.path == '/menu9/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">IT소식</a></div>
+  <div class="col"><a href="/menu11/" class="btn {% if request.path == '/menu11/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">부동산</a></div>
+  <div class="col"><a href="/menu10/" class="btn {% if request.path == '/menu10/' %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 p-1" style="font-size: 0.75rem;">주식소문</a></div>
+</div>

@@ -1,0 +1,16 @@
+<form
+  class="d-flex gap-2 align-items-center mb-0"
+  method="get"
+  {% if not user.is_authenticated %}
+    action="{% url 'board:login' %}"
+    onsubmit="const q = this.querySelector('[name=q]').value.trim(); const nextPath = q ? '{{ request.path|escapejs }}?q=' + encodeURIComponent(q) : '{{ request.path|escapejs }}'; this.querySelector('[name=next]').value = nextPath;"
+  {% endif %}
+>
+  {% if not user.is_authenticated %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+  {% endif %}
+  <input type="search" name="q" class="form-control form-control-sm" placeholder="검색" value="{{ query|default:'' }}" style="max-width: 180px;">
+  <button type="submit" class="btn btn-dark btn-sm" aria-label="검색">
+    <i class="bi bi-search"></i>
+  </button>
+</form>
