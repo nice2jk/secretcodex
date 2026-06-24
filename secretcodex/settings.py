@@ -25,20 +25,7 @@ SECRET_KEY = 'django-insecure-8a)rjfvj67*%s3b#iwn)s+4z^9(pip(^1xk*k&+2%1i-41ljl&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    'secret4news.xyz',
-    'www.secret4news.xyz',
-    'code.secret4news.cloud',
-    'localhost',
-    '127.0.0.1',
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    'http://secret4news.xyz:8001',
-    'https://secret4news.xyz',
-    'https://www.secret4news.xyz',
-    'https://code.secret4news.cloud',
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -91,7 +78,7 @@ WSGI_APPLICATION = 'secretcodex.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testcodex',
+        'NAME': 'secretcodex',
         'USER': 'idl',
         'PASSWORD': 'idl2025!',
         'HOST': '127.0.0.1',
