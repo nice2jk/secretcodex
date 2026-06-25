@@ -128,13 +128,13 @@
             <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-4">
               {% if board_type == 'ai' %}
                 <h1 class="h3 mb-0 fw-bold">AI뉴스</h1>
-                <div class="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end">
+                <div class="d-flex align-items-center gap-2 ms-auto flex-nowrap justify-content-end">
                   {% include "board/includes/compact_search_form.html" %}
                   <a class="btn btn-dark" href="{% url 'board:ai_create' %}">AI뉴스 등록</a>
                 </div>
               {% else %}
                 <h1 class="h3 mb-0 fw-bold">코인뉴스</h1>
-                <div class="d-flex align-items-center gap-2 ms-auto flex-wrap justify-content-end">
+                <div class="d-flex align-items-center gap-2 ms-auto flex-nowrap justify-content-end">
                   {% include "board/includes/compact_search_form.html" %}
                   <a class="btn btn-dark" href="/menu3/new/">코인뉴스 등록</a>
                 </div>
