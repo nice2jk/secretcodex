@@ -14,7 +14,7 @@
     >
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#212529">
-    <style> html { overflow-y: scroll; } .dropdown:hover .dropdown-menu { display: block; margin-top: 0; } .site-header { background-color: #274472; } .btn-site-primary { --bs-btn-color: #fff; --bs-btn-bg: #274472; --bs-btn-border-color: #274472; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #20385f; --bs-btn-hover-border-color: #20385f; --bs-btn-active-color: #fff; --bs-btn-active-bg: #1b3052; --bs-btn-active-border-color: #1b3052; } @media (max-width: 991.98px) { .site-header-nav .navbar-brand, .site-header-mobile { padding-top: 0.7rem; padding-bottom: 0.7rem; } .site-header-mobile .navbar-toggler { padding-top: 0.45rem; padding-bottom: 0.45rem; } } </style>
+    <style> html { overflow-y: scroll; } .dropdown:hover .dropdown-menu { display: block; margin-top: 0; } .site-header { background-color: #274472; } .home-welcome-box { background-color: #fff; border-color: #495057 !important; } .btn-site-primary { --bs-btn-color: #fff; --bs-btn-bg: #274472; --bs-btn-border-color: #274472; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #20385f; --bs-btn-hover-border-color: #20385f; --bs-btn-active-color: #fff; --bs-btn-active-bg: #1b3052; --bs-btn-active-border-color: #1b3052; } @media (max-width: 991.98px) { .site-header-nav .navbar-brand, .site-header-mobile { padding-top: 0.7rem; padding-bottom: 0.7rem; } .site-header-mobile .navbar-toggler { padding-top: 0.45rem; padding-bottom: 0.45rem; } } @media (max-width: 575.98px) { .home-quick-actions-secondary { flex-basis: 100%; justify-content: flex-start; } } </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3843225232663919"
      crossorigin="anonymous"></script>
@@ -63,17 +63,17 @@
               <li class="nav-item"><a class="nav-link" href="/popular/">인기모음</a></li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle {% if '/menu6/' in request.path or '/menu7/' in request.path or '/menu8/' in request.path or '/menu9/' in request.path or '/menu11/' in request.path or '/menu10/' in request.path %}active{% endif %}" href="/menu6/" role="button">
-                  베스트야
+                  딴지보배
                 </a>
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/menu7/">해외축구</a></li>
+                  <li><a class="dropdown-item" href="/menu7/">축구소식</a></li>
                   <li><a class="dropdown-item" href="/menu8/">영화소식</a></li>
                   <li><a class="dropdown-item" href="/menu9/">IT 경제</a></li>
                   <li><a class="dropdown-item" href="/menu11/">부동산</a></li>
-                  <li><a class="dropdown-item" href="/menu10/">주식소문</a></li>
+                  <li><a class="dropdown-item" href="/menu10/">이토유머</a></li>
                 </ul>
               </li>
-              <li class="nav-item"><a class="nav-link" href="/matches/">경기일정</a></li>
+              <li class="nav-item"><a class="nav-link" href="/matches/">해외축구</a></li>
               <li class="nav-item"><a class="nav-link" href="/menu5/">Nada</a></li>
             </ul>
           </div>
@@ -87,16 +87,19 @@
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
-            <div class="px-4 py-4 bg-white rounded-4 shadow-sm border border-5 border-primary-subtle">
+            <div class="px-4 py-4 home-welcome-box rounded-4 shadow-sm border border-5">
               <h2 class="fs-4 fw-bold mb-2">Welcome to 쓰잘데기</h2>
               <p class="small text-danger fw-bold mb-4">로그인을 하시면 Nada 게시판 사용 가능합니다.</p>
               <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                   <a class="btn btn-site-primary" href="/board/">썰게시판</a>
-                  <a class="btn btn-outline-secondary" href="/menu6/">베스트야</a>
-                  <a class="btn btn-outline-secondary" href="/matches/">경기일정</a>
+                  <a class="btn btn-outline-secondary" href="/menu6/">딴지보배</a>
+                  <a class="btn btn-outline-secondary" href="/menu10/">이토유머</a>
                 </div>
-                <a class="btn ms-auto border border-2 border-danger text-danger fw-bold" href="/menu5/">Nada</a>
+                <div class="home-quick-actions-secondary d-flex gap-2">
+                  <a class="btn btn-outline-secondary" href="/matches/">해외축구</a>
+                  <a class="btn border border-2 border-danger text-danger fw-bold" href="/menu5/">Nada</a>
+                </div>
               </div>
             </div>
           </div>
@@ -109,7 +112,7 @@
         <div class="row justify-content-center">
           <div class="col-lg-10 col-xl-8">
             <div class="p-4 bg-white rounded-4 border mb-4">
-              <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="/menu6/" class="text-decoration-none text-dark">베스트야</a></h3>
+              <h3 class="h5 fw-bold mb-3 pb-2 border-bottom"><a href="/menu6/" class="text-decoration-none text-dark">딴지보배</a></h3>
               <div class="list-group list-group-flush">
                 {% for post in recent_best|slice:":7" %}
                   <a href="{{ post.url }}" class="list-group-item list-group-item-action px-0 border-0" target="_blank" rel="noopener">

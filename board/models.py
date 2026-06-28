@@ -55,12 +55,12 @@ class InfoPost(models.Model):
 
 class LinkPost(models.Model):
     CATEGORY_CHOICES = [
-        ('best', '베스트야'),
+        ('best', '딴지보배'),
         ('xart', '조공모음'),
         ('movie', '영화소식'),
         ('itnews', 'IT 뉴스'),
         ('ground', '부동산'),
-        ('stock', '주식소문'),
+        ('stock', '이토유머'),
     ]
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='best', verbose_name='카테고리')
     title = models.CharField(max_length=200)
