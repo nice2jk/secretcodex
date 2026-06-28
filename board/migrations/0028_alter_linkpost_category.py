@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='linkpost',
             name='category',
-            field=models.CharField(choices=[('best', '베스트야'), ('xart', '조공모음'), ('movie', '영화소식'), ('itnews', 'IT 뉴스'), ('ground', '부동산'), ('stock', '주식소문')], default='best', max_length=10, verbose_name='카테고리'),
+            field=models.CharField(choices=[('best', '딴지보배'), ('xart', '조공모음'), ('movie', '영화소식'), ('itnews', 'IT 뉴스'), ('ground', '부동산'), ('stock', '이토유머')], default='best', max_length=10, verbose_name='카테고리'),
         ),
     ]
