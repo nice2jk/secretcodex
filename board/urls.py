@@ -55,4 +55,5 @@ urlpatterns = [
     
     # ads.txt 연결 (template_name 경로에 유의하세요)
     path('ads.txt', TemplateView.as_view(template_name="board/ads.txt", content_type='text/plain')),
+    path('robots.txt', TemplateView.as_view(template_name="board/robots.txt", content_type='text/plain')),
 ]
