@@ -935,8 +935,40 @@ def profile(request):
     )
 
 def match_list(request):
-    scheduled_matches = SoccerMatch.objects.filter(Q(score__isnull=True) | Q(score='')).order_by('match_id')
-    result_matches = SoccerMatch.objects.exclude(score__isnull=True).exclude(score='').order_by('-match_id')
+    match_years = [2027, 2026]
+    match_leagues = [
+        {"label": "프리미어리그", "value": "프리미어리그"},
+        {"label": "라리가", "value": "라리가"},
+        {"label": "챔피언스리그", "value": "챔스"},
+        {"label": "대표팀", "value": "대표"},
+    ]
+    league_values = [league["value"] for league in match_leagues]
+    selected_year = request.GET.get("year")
+    try:
+        selected_year = int(selected_year)
+    except (TypeError, ValueError):
+        selected_year = match_years[0]
+    if selected_year not in match_years:
+        selected_year = match_years[0]
+
+    selected_league = request.GET.get("league")
+    if selected_league not in league_values:
+        selected_league = league_values[0]
+
+    scheduled_matches = SoccerMatch.objects.filter(
+        Q(score__isnull=True) | Q(score=''),
+        league=selected_league,
+        year=selected_year,
+    ).order_by('match_id')
+    result_matches = (
+        SoccerMatch.objects.filter(
+            league=selected_league,
+            year=selected_year,
+        )
+        .exclude(score__isnull=True)
+        .exclude(score='')
+        .order_by('-match_id')
+    )
     schedule_paginator = Paginator(scheduled_matches, 20)
     result_paginator = Paginator(result_matches, 20)
     schedule_page_obj = schedule_paginator.get_page(request.GET.get("schedule_page"))
@@ -948,5 +980,9 @@ def match_list(request):
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,
         'active_tab': active_tab,
+        'match_years': match_years,
+        'selected_year': selected_year,
+        'match_leagues': match_leagues,
+        'selected_league': selected_league,
     }
     return render(request, 'board/match_list.html', context)

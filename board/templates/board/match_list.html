@@ -1,4 +1,4 @@
-{% load static %}
+{% load static tz %}
 <!doctype html>
 <html lang="en">
   <head>
@@ -87,9 +87,38 @@
           <div class="col-lg-10 col-xl-8">
             {% include "board/includes/section_nav_buttons.html" %}
 
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <h1 class="h3 mb-0 fw-bold">해외축구</h1>
+            <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
+              <h1 class="h3 mb-0 fw-bold"><a href="/matches/" class="text-decoration-none text-dark">해외축구</a></h1>
+              <form method="get" class="d-flex align-items-center">
+                <input type="hidden" name="tab" value="schedule">
+                <input type="hidden" name="league" value="{{ selected_league }}">
+                <label for="match-year-select" class="visually-hidden">연도 선택</label>
+                <select id="match-year-select" name="year" class="form-select form-select-sm fw-semibold" onchange="this.form.submit()">
+                  {% for year in match_years %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}년</option>
+                  {% endfor %}
+                </select>
+              </form>
             </div>
+
+            <form method="get" class="mb-3">
+              <input type="hidden" name="year" value="{{ selected_year }}">
+              <input type="hidden" name="tab" value="schedule">
+              <div class="row row-cols-2 row-cols-sm-4 g-2">
+                {% for league in match_leagues %}
+                  <div class="col">
+                    <button
+                      type="submit"
+                      name="league"
+                      value="{{ league.value }}"
+                      class="btn {% if league.value == selected_league %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 fw-semibold text-wrap lh-sm py-2"
+                    >
+                      {{ league.label }}
+                    </button>
+                  </div>
+                {% endfor %}
+              </div>
+            </form>
 
             <ul class="nav nav-tabs mb-3 small" id="matchTab" role="tablist">
               <li class="nav-item" role="presentation">
@@ -115,7 +144,7 @@
                       </div>
                       <div class="d-flex justify-content-between text-secondary small">
                         <span>조회 0 | {{ match.league }}</span>
-                        <span>{{ match.match_date|date:"Y-m-d H:i" }}</span>
+                        <span>{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
                       </div>
                     </div>
                   {% empty %}
@@ -128,21 +157,41 @@
                     <ul class="pagination justify-content-center">
                       {% if schedule_page_obj.has_previous %}
                         <li class="page-item">
-                          <a class="page-link" href="?tab=schedule&schedule_page={{ schedule_page_obj.previous_page_number }}">Prev</a>
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ schedule_page_obj.previous_page_number }}">Prev</a>
                         </li>
                       {% else %}
                         <li class="page-item disabled"><span class="page-link">Prev</span></li>
                       {% endif %}
 
-                      <li class="page-item disabled">
-                        <span class="page-link">
-                          {{ schedule_page_obj.number }} / {{ schedule_page_obj.paginator.num_pages }}
-                        </span>
-                      </li>
+                      {% for i in schedule_page_obj.paginator.page_range %}
+                        {% if schedule_page_obj.paginator.num_pages <= 5 %}
+                          <li class="page-item {% if i == schedule_page_obj.number %}active{% endif %}">
+                            <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ i }}">{{ i }}</a>
+                          </li>
+                        {% elif schedule_page_obj.number <= 3 %}
+                          {% if i <= 5 %}
+                            <li class="page-item {% if i == schedule_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% elif schedule_page_obj.number > schedule_page_obj.paginator.num_pages|add:"-3" %}
+                          {% if i > schedule_page_obj.paginator.num_pages|add:"-5" %}
+                            <li class="page-item {% if i == schedule_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% else %}
+                          {% if i >= schedule_page_obj.number|add:"-2" and i <= schedule_page_obj.number|add:"2" %}
+                            <li class="page-item {% if i == schedule_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
 
                       {% if schedule_page_obj.has_next %}
                         <li class="page-item">
-                          <a class="page-link" href="?tab=schedule&schedule_page={{ schedule_page_obj.next_page_number }}">Next</a>
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=schedule&schedule_page={{ schedule_page_obj.next_page_number }}">Next</a>
                         </li>
                       {% else %}
                         <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -166,7 +215,7 @@
                       </div>
                       <div class="d-flex justify-content-between text-secondary small">
                         <span>조회 0 | {{ match.league }}</span>
-                        <span>{{ match.match_date|date:"Y-m-d H:i" }}</span>
+                        <span>{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
                       </div>
                     </div>
                   {% empty %}
@@ -179,21 +228,41 @@
                     <ul class="pagination justify-content-center">
                       {% if result_page_obj.has_previous %}
                         <li class="page-item">
-                          <a class="page-link" href="?tab=results&result_page={{ result_page_obj.previous_page_number }}">Prev</a>
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ result_page_obj.previous_page_number }}">Prev</a>
                         </li>
                       {% else %}
                         <li class="page-item disabled"><span class="page-link">Prev</span></li>
                       {% endif %}
 
-                      <li class="page-item disabled">
-                        <span class="page-link">
-                          {{ result_page_obj.number }} / {{ result_page_obj.paginator.num_pages }}
-                        </span>
-                      </li>
+                      {% for i in result_page_obj.paginator.page_range %}
+                        {% if result_page_obj.paginator.num_pages <= 5 %}
+                          <li class="page-item {% if i == result_page_obj.number %}active{% endif %}">
+                            <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ i }}">{{ i }}</a>
+                          </li>
+                        {% elif result_page_obj.number <= 3 %}
+                          {% if i <= 5 %}
+                            <li class="page-item {% if i == result_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% elif result_page_obj.number > result_page_obj.paginator.num_pages|add:"-3" %}
+                          {% if i > result_page_obj.paginator.num_pages|add:"-5" %}
+                            <li class="page-item {% if i == result_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% else %}
+                          {% if i >= result_page_obj.number|add:"-2" and i <= result_page_obj.number|add:"2" %}
+                            <li class="page-item {% if i == result_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
 
                       {% if result_page_obj.has_next %}
                         <li class="page-item">
-                          <a class="page-link" href="?tab=results&result_page={{ result_page_obj.next_page_number }}">Next</a>
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ result_page_obj.next_page_number }}">Next</a>
                         </li>
                       {% else %}
                         <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -213,5 +282,15 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
+    <script>
+      document.querySelectorAll('#matchTab button[data-bs-toggle="tab"]').forEach((tabButton) => {
+        tabButton.addEventListener('shown.bs.tab', (event) => {
+          const activeTab = event.target.id === 'results-tab' ? 'results' : 'schedule';
+          document.querySelectorAll('.active-tab-input').forEach((activeTabInput) => {
+            activeTabInput.value = activeTab;
+          });
+        });
+      });
+    </script>
   </body>
 </html>
