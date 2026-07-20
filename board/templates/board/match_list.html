@@ -101,7 +101,7 @@
               </form>
             </div>
 
-            <form method="get" class="mb-3">
+            <form method="get" class="section-nav-buttons mb-3">
               <input type="hidden" name="year" value="{{ selected_year }}">
               <input type="hidden" name="tab" value="schedule">
               <div class="row row-cols-2 row-cols-sm-4 g-2">
@@ -111,7 +111,8 @@
                       type="submit"
                       name="league"
                       value="{{ league.value }}"
-                      class="btn {% if league.value == selected_league %}btn-dark{% else %}btn-outline-dark{% endif %} w-100 fw-semibold text-wrap lh-sm py-2"
+                      class="btn {% if league.value == selected_league %}text-white{% else %}btn-outline-dark{% endif %} w-100 fw-semibold text-wrap lh-sm py-2"
+                      style="{% if league.value == selected_league %}background-color: #495057; border-color: #495057;{% endif %}"
                     >
                       {{ league.label }}
                     </button>

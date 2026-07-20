@@ -939,7 +939,7 @@ def match_list(request):
     match_leagues = [
         {"label": "프리미어리그", "value": "프리미어리그"},
         {"label": "라리가", "value": "라리가"},
-        {"label": "챔피언스리그", "value": "챔스"},
+        {"label": "분데스리가", "value": "분데스리가"},
         {"label": "대표팀", "value": "대표"},
     ]
     league_values = [league["value"] for league in match_leagues]
