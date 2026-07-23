@@ -55,7 +55,7 @@ class InfoPost(models.Model):
 
 class LinkPost(models.Model):
     CATEGORY_CHOICES = [
-        ('best', '딴지보배'),
+        ('best', '베스트야'),
         ('xart', '조공모음'),
         ('movie', '영화소식'),
         ('itnews', 'IT 뉴스'),
@@ -98,6 +98,8 @@ class SoccerMatch(models.Model):
     away_team = models.CharField(max_length=100)
     score = models.CharField(max_length=20, null=True, blank=True)
     year = models.PositiveSmallIntegerField(null=True, blank=True)
+    is_recommended = models.BooleanField(default=False)
+    liked_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

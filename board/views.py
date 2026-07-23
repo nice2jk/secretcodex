@@ -1,4 +1,7 @@
 ﻿import json
+from urllib.parse import quote_plus
+from zoneinfo import ZoneInfo
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -7,10 +10,15 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 from django.db.models import Count, Q
 from django.utils.crypto import get_random_string
+from django.utils import timezone
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm, ThreadPostForm
 from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
+
+
+MAX_FAVORITE_MATCHES = 10
 
 
 def _get_display_name(user):
@@ -22,6 +30,22 @@ def _get_display_name(user):
 def _save_post_images(post, images, remaining):
     for image in images[:remaining]:
         PostImage.objects.create(post=post, image=image)
+
+
+def _match_favorite_payload(match):
+    score = f" ({match.score})" if match.score else ""
+    round_label = f"[{match.round_num}]" if match.round_num else ""
+    title = f"{match.home_team} vs {match.away_team}{score}"
+    local_match_date = timezone.localtime(match.match_date, ZoneInfo("Asia/Seoul"))
+    query = quote_plus(f"{match.home_team} vs {match.away_team}")
+    return {
+        "id": match.id,
+        "round_label": round_label,
+        "title": title,
+        "meta": f"{match.league} · {local_match_date:%Y-%m-%d %H:%M}",
+        "sort_key": int(match.match_date.timestamp()),
+        "url": f"https://www.google.com/search?q={query}",
+    }
 
 
 def home(request):
@@ -360,6 +384,60 @@ def link_like(request, link_id):
     link.is_recommended = not link.is_recommended
     link.save()
     return JsonResponse({'like_count': 0, 'is_liked': link.is_recommended})
+
+@require_POST
+def match_like(request, match_id):
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    replace_oldest = bool(payload.get("replace_oldest"))
+
+    with transaction.atomic():
+        match = get_object_or_404(SoccerMatch.objects.select_for_update(), id=match_id)
+
+        if match.is_recommended:
+            match.is_recommended = False
+            match.liked_at = None
+            match.save(update_fields=["is_recommended", "liked_at"])
+            return JsonResponse({
+                'is_liked': False,
+                'favorite_count': SoccerMatch.objects.filter(is_recommended=True).count(),
+            })
+
+        favorite_matches = (
+            SoccerMatch.objects.select_for_update()
+            .filter(is_recommended=True)
+            .exclude(id=match.id)
+            .order_by("liked_at", "id")
+        )
+        favorite_count = favorite_matches.count()
+        if favorite_count >= MAX_FAVORITE_MATCHES and not replace_oldest:
+            return JsonResponse({
+                'requires_confirmation': True,
+                'is_liked': False,
+                'message': '즐겨찾기 10게임입니다. 오래된 경기를 삭제할까요?',
+            })
+
+        removed_match_id = None
+        if favorite_count >= MAX_FAVORITE_MATCHES:
+            oldest_match = favorite_matches.first()
+            if oldest_match:
+                removed_match_id = oldest_match.id
+                oldest_match.is_recommended = False
+                oldest_match.liked_at = None
+                oldest_match.save(update_fields=["is_recommended", "liked_at"])
+
+        match.is_recommended = True
+        match.liked_at = timezone.now()
+        match.save(update_fields=["is_recommended", "liked_at"])
+
+    return JsonResponse({
+        'is_liked': True,
+        'removed_match_id': removed_match_id,
+        'favorite_count': SoccerMatch.objects.filter(is_recommended=True).count(),
+        'match': _match_favorite_payload(match),
+    })
 
 @require_POST
 def info_like(request, info_id):
@@ -976,9 +1054,11 @@ def match_list(request):
     active_tab = request.GET.get("tab")
     if active_tab not in ["schedule", "results"]:
         active_tab = "schedule"
+    recent_liked_matches = SoccerMatch.objects.filter(is_recommended=True).order_by("match_date", "id")[:10]
     context = {
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,
+        'recent_liked_matches': recent_liked_matches,
         'active_tab': active_tab,
         'match_years': match_years,
         'selected_year': selected_year,
