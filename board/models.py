@@ -90,6 +90,20 @@ class LinkPost(models.Model):
         return self.title
 
 class SoccerMatch(models.Model):
+    OUTCOME_HOME_WIN = 1
+    OUTCOME_DRAW = 0
+    OUTCOME_AWAY_WIN = 2
+    OUTCOME_CHOICES = [
+        (OUTCOME_HOME_WIN, '승'),
+        (OUTCOME_DRAW, '무'),
+        (OUTCOME_AWAY_WIN, '패'),
+    ]
+    BET_LABELS = {
+        OUTCOME_HOME_WIN: '승리',
+        OUTCOME_DRAW: '무승부',
+        OUTCOME_AWAY_WIN: '패배',
+    }
+
     match_id = models.CharField(max_length=32, unique=True)
     round_num = models.CharField(max_length=20, null=True, blank=True)
     match_date = models.DateTimeField()
@@ -97,6 +111,8 @@ class SoccerMatch(models.Model):
     home_team = models.CharField(max_length=100)
     away_team = models.CharField(max_length=100)
     score = models.CharField(max_length=20, null=True, blank=True)
+    result = models.PositiveSmallIntegerField(choices=OUTCOME_CHOICES, null=True, blank=True)
+    bet = models.PositiveSmallIntegerField(choices=OUTCOME_CHOICES, null=True, blank=True)
     year = models.PositiveSmallIntegerField(null=True, blank=True)
     is_recommended = models.BooleanField(default=False)
     liked_at = models.DateTimeField(null=True, blank=True)
@@ -108,3 +124,40 @@ class SoccerMatch(models.Model):
 
     def __str__(self):
         return f"{self.home_team} vs {self.away_team}"
+
+    @property
+    def has_bet(self):
+        return self.bet is not None
+
+    @property
+    def prediction_status_label(self):
+        if self.bet is None or self.result is None:
+            return ''
+        return '적중' if self.bet == self.result else '실패'
+
+    @property
+    def prediction_status_class(self):
+        if self.bet is None or self.result is None:
+            return ''
+        return 'text-danger' if self.bet == self.result else 'text-success'
+
+    def _prediction_button_class(self, value):
+        if self.bet is not None and self.result is not None and self.bet == value and self.result == value:
+            return 'btn-danger'
+        if self.result is not None and self.result == value:
+            return 'btn-primary'
+        if self.bet is not None and self.bet == value:
+            return 'btn-success'
+        return 'btn-outline-dark'
+
+    @property
+    def home_win_button_class(self):
+        return self._prediction_button_class(self.OUTCOME_HOME_WIN)
+
+    @property
+    def draw_button_class(self):
+        return self._prediction_button_class(self.OUTCOME_DRAW)
+
+    @property
+    def away_win_button_class(self):
+        return self._prediction_button_class(self.OUTCOME_AWAY_WIN)

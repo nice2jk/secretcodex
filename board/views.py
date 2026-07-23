@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db import connection
+from django.db.models import Count, F, Q
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm, ThreadPostForm
@@ -19,6 +20,7 @@ from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, Socce
 
 
 MAX_FAVORITE_MATCHES = 10
+MATCH_BET_VALUES = {0, 1, 2}
 
 
 def _get_display_name(user):
@@ -45,6 +47,58 @@ def _match_favorite_payload(match):
         "meta": f"{match.league} · {local_match_date:%Y-%m-%d %H:%M}",
         "sort_key": int(match.match_date.timestamp()),
         "url": f"https://www.google.com/search?q={query}",
+    }
+
+
+def _can_set_match_bet(user):
+    if not user.is_authenticated:
+        return False
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT is_superuser FROM auth_user WHERE id = %s", [user.id])
+        row = cursor.fetchone()
+
+    if not row:
+        return False
+
+    try:
+        return int(row[0]) == 2
+    except (TypeError, ValueError):
+        return False
+
+
+def _match_bet_payload(match):
+    return {
+        'bet': match.bet,
+        'status_label': match.prediction_status_label,
+        'status_class': match.prediction_status_class,
+        'button_classes': {
+            '1': match.home_win_button_class,
+            '0': match.draw_button_class,
+            '2': match.away_win_button_class,
+        },
+    }
+
+
+def _format_accuracy_rate(hit_count, bet_count):
+    if bet_count == 0:
+        return '0%'
+
+    rate = hit_count * 100 / bet_count
+    if rate.is_integer():
+        return f'{int(rate)}%'
+    return f'{rate:.1f}%'
+
+
+def _match_bet_accuracy_stats():
+    stats = SoccerMatch.objects.aggregate(
+        bet_count=Count('id', filter=Q(bet__isnull=False)),
+        hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
+    )
+    bet_count = stats['bet_count'] or 0
+    return {
+        'bet_count': bet_count,
+        'accuracy': _format_accuracy_rate(stats['hit_count'] or 0, bet_count),
     }
 
 
@@ -438,6 +492,48 @@ def match_like(request, match_id):
         'favorite_count': SoccerMatch.objects.filter(is_recommended=True).count(),
         'match': _match_favorite_payload(match),
     })
+
+
+@require_POST
+def match_bet(request, match_id):
+    if not _can_set_match_bet(request.user):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    try:
+        bet = int(payload.get("bet"))
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid bet'}, status=400)
+
+    if bet not in MATCH_BET_VALUES:
+        return JsonResponse({'error': 'Invalid bet'}, status=400)
+
+    with transaction.atomic():
+        match = get_object_or_404(SoccerMatch.objects.select_for_update(), id=match_id)
+        if match.result is not None:
+            return JsonResponse({
+                'error': 'Match already finished',
+                'match': _match_bet_payload(match),
+            }, status=409)
+
+        if match.bet is not None:
+            return JsonResponse({
+                'error': 'Bet already set',
+                'match': _match_bet_payload(match),
+            }, status=409)
+
+        match.bet = bet
+        match.save(update_fields=["bet"])
+
+    return JsonResponse({
+        'message': 'success',
+        'match': _match_bet_payload(match),
+    })
+
 
 @require_POST
 def info_like(request, info_id):
@@ -968,7 +1064,7 @@ def password_reset(request):
                 if user.profile.nickname == nickname:
                     temp_password = get_random_string(10)
                     user.set_password(temp_password)
-                    user.save()
+                    user.save(update_fields=["password"])
                     user.profile.is_temporary_password = True
                     user.profile.save()
                 else:
@@ -986,7 +1082,7 @@ def password_change(request):
         form = PasswordChangeForm(request.POST)
         if form.is_valid():
             request.user.set_password(form.cleaned_data['new_password'])
-            request.user.save()
+            request.user.save(update_fields=["password"])
             request.user.profile.is_temporary_password = False
             request.user.profile.save()
             login(request, request.user)  # 비밀번호 변경 후 세션 유지
@@ -1055,10 +1151,14 @@ def match_list(request):
     if active_tab not in ["schedule", "results"]:
         active_tab = "schedule"
     recent_liked_matches = SoccerMatch.objects.filter(is_recommended=True).order_by("match_date", "id")[:10]
+    match_bet_accuracy_stats = _match_bet_accuracy_stats()
     context = {
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,
         'recent_liked_matches': recent_liked_matches,
+        'can_set_match_bet': _can_set_match_bet(request.user),
+        'match_bet_count': match_bet_accuracy_stats['bet_count'],
+        'match_bet_accuracy': match_bet_accuracy_stats['accuracy'],
         'active_tab': active_tab,
         'match_years': match_years,
         'selected_year': selected_year,

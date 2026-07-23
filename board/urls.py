@@ -17,6 +17,7 @@ urlpatterns = [
     path("board/<int:post_id>/like/json/", views.post_like_json, name="post_like_json"),
     path("link/<int:link_id>/like/", views.link_like, name="link_like"),
     path("match/<int:match_id>/like/", views.match_like, name="match_like"),
+    path("match/<int:match_id>/bet/", views.match_bet, name="match_bet"),
     path("info/<int:info_id>/like/", views.info_like, name="info_like"),
     path("menu3/", views.link_list, name="link_list"),
     path("menu3/new/", views.info_create, name="link_create"),

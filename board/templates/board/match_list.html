@@ -13,7 +13,7 @@
       crossorigin="anonymous"
     >
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style> html { overflow-y: scroll; } .dropdown:hover .dropdown-menu { display: block; margin-top: 0; } .site-header { background-color: #495057; } .match-title-wrap { min-width: 0; } .match-like-button { line-height: 1; } @media (max-width: 991.98px) { .site-header-nav .navbar-brand, .site-header-mobile { padding-top: 0.7rem; padding-bottom: 0.7rem; } .site-header-mobile .navbar-toggler { padding-top: 0.45rem; padding-bottom: 0.45rem; } } </style>
+    <style> html { overflow-y: scroll; } .dropdown:hover .dropdown-menu { display: block; margin-top: 0; } .site-header { background-color: #495057; } .match-title-wrap { min-width: 0; } .match-title-link { font-size: 1.05rem; } .match-date { font-size: 0.95rem; white-space: nowrap; } .match-like-button { line-height: 1; } .match-bet-row { gap: 0.75rem; } .match-bet-controls { gap: 0.65rem; } .match-bet-label { white-space: nowrap; } .match-bet-actions { gap: 0.35rem; } .match-bet-button { min-width: 3.25rem; } .match-bet-button:disabled { opacity: 1; } @media (max-width: 575.98px) { .match-summary-row { gap: 0.25rem; } .match-bet-row { gap: 0.5rem; } .match-bet-controls { justify-content: flex-start !important; flex-wrap: wrap; } .match-bet-actions { flex-shrink: 0; } } @media (max-width: 991.98px) { .site-header-nav .navbar-brand, .site-header-mobile { padding-top: 0.7rem; padding-bottom: 0.7rem; } .site-header-mobile .navbar-toggler { padding-top: 0.45rem; padding-bottom: 0.45rem; } } </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3843225232663919"
      crossorigin="anonymous"></script>
@@ -126,9 +126,13 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
               <h1 class="h3 mb-0 fw-bold"><a href="/matches/" class="text-decoration-none text-dark">해외축구</a></h1>
-              <form method="get" class="d-flex align-items-center">
+              <form method="get" class="d-flex align-items-center gap-2">
                 <input type="hidden" name="tab" value="schedule">
                 <input type="hidden" name="league" value="{{ selected_league }}">
+                <div class="small fw-semibold text-nowrap">
+                  <span class="text-dark">주인장 적중률 ({{ match_bet_count }}경기) : </span>
+                  <span class="text-danger">{{ match_bet_accuracy }}</span>
+                </div>
                 <label for="match-year-select" class="visually-hidden">연도 선택</label>
                 <select id="match-year-select" name="year" class="form-select form-select-sm fw-semibold" onchange="this.form.submit()">
                   {% for year in match_years %}
@@ -172,26 +176,37 @@
                 <div class="list-group shadow-sm">
                   {% for match in schedule_page_obj %}
                     <div class="list-group-item py-2">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
+                      <div class="d-flex justify-content-between align-items-center mb-2 match-summary-row">
                         <div class="match-title-wrap pe-2">
                           <span class="text-primary fw-bold me-2">[{{ match.round_num }}]</span>
-                          <a class="fw-semibold text-dark text-decoration-none" href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}" target="_blank" rel="noopener">
+                          <a class="fw-semibold text-dark text-decoration-none match-title-link" href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}" target="_blank" rel="noopener">
                             {{ match.home_team }} vs {{ match.away_team }}{% if match.score %} ({{ match.score }}){% endif %}
                           </a>
                         </div>
-                        <button
-                          type="button"
-                          class="btn btn-link p-0 text-decoration-none d-flex align-items-center match-like-button"
-                          data-match-id="{{ match.id }}"
-                          onclick="toggleMatchLike(this, {{ match.id }})"
-                          aria-label="즐겨찾기"
-                        >
-                          <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
-                        </button>
+                        <span class="fw-semibold text-dark match-date">{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
                       </div>
-                      <div class="d-flex justify-content-between text-secondary small">
-                        <span>조회 0 | {{ match.league }}</span>
-                        <span>{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
+                      <div class="d-flex justify-content-between align-items-center small match-bet-row">
+                        <span class="text-dark">{{ match.league }}</span>
+                        <div class="d-flex align-items-center justify-content-end match-bet-controls">
+                          <button
+                            type="button"
+                            class="btn btn-link p-0 text-decoration-none d-flex align-items-center match-like-button"
+                            data-match-id="{{ match.id }}"
+                            onclick="toggleMatchLike(this, {{ match.id }})"
+                            aria-label="즐겨찾기"
+                          >
+                            <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
+                          </button>
+                          <div class="match-bet-label">
+                            <span class="text-dark">주인장 예측</span>
+                            <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{{ match.prediction_status_label }}</span>
+                          </div>
+                          <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
+                            <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
+                            <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
+                            <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   {% empty %}
@@ -252,26 +267,37 @@
                 <div class="list-group shadow-sm">
                   {% for match in result_page_obj %}
                     <div class="list-group-item py-2">
-                      <div class="d-flex justify-content-between align-items-center mb-1">
+                      <div class="d-flex justify-content-between align-items-center mb-2 match-summary-row">
                         <div class="match-title-wrap pe-2">
                           <span class="text-primary fw-bold me-2">[{{ match.round_num }}]</span>
-                          <a class="fw-semibold text-dark text-decoration-none" href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}" target="_blank" rel="noopener">
+                          <a class="fw-semibold text-dark text-decoration-none match-title-link" href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}" target="_blank" rel="noopener">
                             {{ match.home_team }} vs {{ match.away_team }}{% if match.score %} ({{ match.score }}){% endif %}
                           </a>
                         </div>
-                        <button
-                          type="button"
-                          class="btn btn-link p-0 text-decoration-none d-flex align-items-center match-like-button"
-                          data-match-id="{{ match.id }}"
-                          onclick="toggleMatchLike(this, {{ match.id }})"
-                          aria-label="즐겨찾기"
-                        >
-                          <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
-                        </button>
+                        <span class="fw-semibold text-dark match-date">{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
                       </div>
-                      <div class="d-flex justify-content-between text-secondary small">
-                        <span>조회 0 | {{ match.league }}</span>
-                        <span>{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
+                      <div class="d-flex justify-content-between align-items-center small match-bet-row">
+                        <span class="text-dark">{{ match.league }}</span>
+                        <div class="d-flex align-items-center justify-content-end match-bet-controls">
+                          <button
+                            type="button"
+                            class="btn btn-link p-0 text-decoration-none d-flex align-items-center match-like-button"
+                            data-match-id="{{ match.id }}"
+                            onclick="toggleMatchLike(this, {{ match.id }})"
+                            aria-label="즐겨찾기"
+                          >
+                            <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
+                          </button>
+                          <div class="match-bet-label">
+                            <span class="text-dark">주인장 예측</span>
+                            <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{{ match.prediction_status_label }}</span>
+                          </div>
+                          <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
+                            <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
+                            <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
+                            <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   {% empty %}
@@ -406,6 +432,59 @@
           applyMatchLikeResponse(data, matchId);
         })
         .catch(error => console.error('Error:', error));
+      }
+
+      function setMatchBet(button) {
+        if (!button || button.disabled) {
+          return;
+        }
+        const matchId = button.dataset.matchId;
+        const bet = Number(button.dataset.bet);
+        button.disabled = true;
+
+        fetch('/match/' + matchId + '/bet/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({ bet })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+        .then(({ ok, data }) => {
+          if (data.match) {
+            applyMatchBetResponse(matchId, data.match);
+          }
+          if (!ok) {
+            if (!data.match) {
+              button.disabled = false;
+            }
+            if (data.error === 'Permission denied') {
+              alert('권한이 없습니다.');
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          button.disabled = false;
+        });
+      }
+
+      function applyMatchBetResponse(matchId, match) {
+        document.querySelectorAll(`.match-bet-status[data-match-id="${matchId}"]`).forEach((status) => {
+          status.textContent = match.status_label;
+          status.classList.remove('text-secondary', 'text-dark', 'text-success', 'text-primary', 'text-danger');
+          if (match.status_class) {
+            status.classList.add(match.status_class);
+          }
+        });
+
+        document.querySelectorAll(`.match-bet-button[data-match-id="${matchId}"]`).forEach((betButton) => {
+          betButton.disabled = true;
+          betButton.classList.remove('btn-outline-dark', 'btn-success', 'btn-primary', 'btn-danger');
+          betButton.classList.add(match.button_classes[betButton.dataset.bet] || 'btn-outline-dark');
+          betButton.classList.toggle('active', Number(betButton.dataset.bet) === Number(match.bet));
+        });
       }
 
       function applyMatchLikeResponse(data, matchId) {
