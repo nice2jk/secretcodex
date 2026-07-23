@@ -65,7 +65,7 @@ class SoccerMatchPredictionStatusTests(SimpleTestCase):
 
 
 class MatchBetAccuracyTests(SimpleTestCase):
-    def test_zero_bets_shows_zero_percent(self):
+    def test_zero_completed_bets_shows_zero_percent(self):
         self.assertEqual(_format_accuracy_rate(0, 0), "0%")
 
     def test_integer_accuracy_omits_decimal(self):
@@ -75,13 +75,13 @@ class MatchBetAccuracyTests(SimpleTestCase):
         self.assertEqual(_format_accuracy_rate(2, 3), "66.7%")
 
     @patch("board.views.SoccerMatch.objects")
-    def test_accuracy_stats_include_bet_count(self, soccer_match_objects):
+    def test_accuracy_stats_include_completed_bet_count(self, soccer_match_objects):
         soccer_match_objects.aggregate.return_value = {
-            "bet_count": 5,
+            "completed_bet_count": 5,
             "hit_count": 2,
         }
 
         self.assertEqual(
             _match_bet_accuracy_stats(),
-            {"bet_count": 5, "accuracy": "40%"},
+            {"completed_bet_count": 5, "accuracy": "40%"},
         )

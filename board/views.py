@@ -80,11 +80,11 @@ def _match_bet_payload(match):
     }
 
 
-def _format_accuracy_rate(hit_count, bet_count):
-    if bet_count == 0:
+def _format_accuracy_rate(hit_count, completed_bet_count):
+    if completed_bet_count == 0:
         return '0%'
 
-    rate = hit_count * 100 / bet_count
+    rate = hit_count * 100 / completed_bet_count
     if rate.is_integer():
         return f'{int(rate)}%'
     return f'{rate:.1f}%'
@@ -92,13 +92,13 @@ def _format_accuracy_rate(hit_count, bet_count):
 
 def _match_bet_accuracy_stats():
     stats = SoccerMatch.objects.aggregate(
-        bet_count=Count('id', filter=Q(bet__isnull=False)),
+        completed_bet_count=Count('id', filter=Q(bet__isnull=False, result__isnull=False)),
         hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
     )
-    bet_count = stats['bet_count'] or 0
+    completed_bet_count = stats['completed_bet_count'] or 0
     return {
-        'bet_count': bet_count,
-        'accuracy': _format_accuracy_rate(stats['hit_count'] or 0, bet_count),
+        'completed_bet_count': completed_bet_count,
+        'accuracy': _format_accuracy_rate(stats['hit_count'] or 0, completed_bet_count),
     }
 
 
@@ -1157,7 +1157,7 @@ def match_list(request):
         'result_page_obj': result_page_obj,
         'recent_liked_matches': recent_liked_matches,
         'can_set_match_bet': _can_set_match_bet(request.user),
-        'match_bet_count': match_bet_accuracy_stats['bet_count'],
+        'match_bet_count': match_bet_accuracy_stats['completed_bet_count'],
         'match_bet_accuracy': match_bet_accuracy_stats['accuracy'],
         'active_tab': active_tab,
         'match_years': match_years,
