@@ -20,6 +20,7 @@ from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, Socce
 
 
 MAX_FAVORITE_MATCHES = 10
+TOP_MATCH_LIST_LIMIT = 7
 MATCH_BET_VALUES = {0, 1, 2}
 
 
@@ -32,6 +33,14 @@ def _get_display_name(user):
 def _save_post_images(post, images, remaining):
     for image in images[:remaining]:
         PostImage.objects.create(post=post, image=image)
+
+
+def _match_bet_badge_class(bet):
+    return {
+        SoccerMatch.OUTCOME_HOME_WIN: "text-bg-primary",
+        SoccerMatch.OUTCOME_DRAW: "text-bg-dark",
+        SoccerMatch.OUTCOME_AWAY_WIN: "text-bg-success",
+    }.get(bet, "text-bg-secondary")
 
 
 def _match_favorite_payload(match):
@@ -47,6 +56,8 @@ def _match_favorite_payload(match):
         "meta": f"{match.league} · {local_match_date:%Y-%m-%d %H:%M}",
         "sort_key": int(match.match_date.timestamp()),
         "url": f"https://www.google.com/search?q={query}",
+        "bet_label": match.get_bet_display() if match.bet is not None else "",
+        "bet_badge_class": _match_bet_badge_class(match.bet),
     }
 
 
@@ -77,6 +88,7 @@ def _match_bet_payload(match):
             '0': match.draw_button_class,
             '2': match.away_win_button_class,
         },
+        'pending_match': _match_favorite_payload(match) if match.bet is not None and match.result is None and not match.score else None,
     }
 
 
@@ -1150,12 +1162,21 @@ def match_list(request):
     active_tab = request.GET.get("tab")
     if active_tab not in ["schedule", "results"]:
         active_tab = "schedule"
-    recent_liked_matches = SoccerMatch.objects.filter(is_recommended=True).order_by("match_date", "id")[:10]
+    recent_liked_matches = SoccerMatch.objects.filter(is_recommended=True).order_by("match_date", "id")[:TOP_MATCH_LIST_LIMIT]
+    pending_bet_matches = (
+        SoccerMatch.objects.filter(
+            Q(score__isnull=True) | Q(score=''),
+            bet__isnull=False,
+            result__isnull=True,
+        )
+        .order_by("match_date", "id")[:TOP_MATCH_LIST_LIMIT]
+    )
     match_bet_accuracy_stats = _match_bet_accuracy_stats()
     context = {
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,
         'recent_liked_matches': recent_liked_matches,
+        'pending_bet_matches': pending_bet_matches,
         'can_set_match_bet': _can_set_match_bet(request.user),
         'match_bet_count': match_bet_accuracy_stats['completed_bet_count'],
         'match_bet_accuracy': match_bet_accuracy_stats['accuracy'],
