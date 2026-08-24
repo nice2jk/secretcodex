@@ -95,8 +95,11 @@
                   <li class="nav-item" role="presentation">
                     <button class="nav-link" id="bet-featured-tab" data-bs-toggle="tab" data-bs-target="#bet-featured-tab-pane" type="button" role="tab" aria-controls="bet-featured-tab-pane" aria-selected="false">베팅게임</button>
                   </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bet-result-featured-tab" data-bs-toggle="tab" data-bs-target="#bet-result-featured-tab-pane" type="button" role="tab" aria-controls="bet-result-featured-tab-pane" aria-selected="false">베팅결과</button>
+                  </li>
                 </ul>
-                <span class="text-secondary small">경기 시간순</span>
+                <span class="text-secondary small">경기 시간순 · 결과 최신순</span>
               </div>
               <div class="tab-content" id="featuredMatchTabContent">
                 <div class="tab-pane fade show active" id="favorite-featured-tab-pane" role="tabpanel" aria-labelledby="favorite-featured-tab" tabindex="0">
@@ -153,6 +156,32 @@
                     {% endfor %}
                   </div>
                 </div>
+                <div class="tab-pane fade" id="bet-result-featured-tab-pane" role="tabpanel" aria-labelledby="bet-result-featured-tab" tabindex="0">
+                  <div class="list-group shadow-sm" id="bet-result-match-list">
+                    {% for match in completed_bet_matches %}
+                      <div class="list-group-item py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <a
+                            class="fw-semibold text-dark text-decoration-none text-truncate small match-title-wrap pe-2"
+                            href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}"
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            <span class="text-primary fw-bold me-1">[{{ match.round_num }}]</span>
+                            {{ match.home_team }} vs {{ match.away_team }}{% if match.score %} ({{ match.score }}){% endif %}
+                          </a>
+                          <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                            <span class="badge {% if match.bet == 1 %}text-bg-primary{% elif match.bet == 0 %}text-bg-dark{% else %}text-bg-success{% endif %}">예측 {{ match.get_bet_display }}</span>
+                            <span class="badge {% if match.bet == match.result %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ match.prediction_status_label }}</span>
+                          </div>
+                        </div>
+                        <div class="text-secondary" style="font-size: 0.75rem;">{{ match.league }} · {{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</div>
+                      </div>
+                    {% empty %}
+                      <div class="list-group-item text-secondary small">베팅 결과가 없습니다.</div>
+                    {% endfor %}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -161,10 +190,10 @@
             <div class="d-flex justify-content-between align-items-center mb-4 gap-3">
               <h1 class="h3 mb-0 fw-bold"><a href="/matches/" class="text-decoration-none text-dark">해외축구</a></h1>
               <form method="get" class="d-flex align-items-center gap-2">
-                <input type="hidden" name="tab" value="schedule">
+                <input type="hidden" name="tab" value="{{ active_tab }}" class="active-tab-input">
                 <input type="hidden" name="league" value="{{ selected_league }}">
                 <div class="small fw-semibold text-nowrap">
-                  <span class="text-dark">주인장 적중률 ({{ match_bet_count }}경기) : </span>
+                  <span class="text-dark">주인장 적중률 ({{ match_bet_hit_count }} / {{ match_bet_result_count }}) : </span>
                   <span class="text-danger">{{ match_bet_accuracy }}</span>
                 </div>
                 <label for="match-year-select" class="visually-hidden">연도 선택</label>
@@ -178,7 +207,7 @@
 
             <form method="get" class="section-nav-buttons mb-3">
               <input type="hidden" name="year" value="{{ selected_year }}">
-              <input type="hidden" name="tab" value="schedule">
+              <input type="hidden" name="tab" value="{{ active_tab }}" class="active-tab-input">
               <div class="row row-cols-2 row-cols-sm-4 g-2">
                 {% for league in match_leagues %}
                   <div class="col">
@@ -202,6 +231,9 @@
               </li>
               <li class="nav-item" role="presentation">
                 <button class="nav-link {% if active_tab == 'results' %}active{% endif %}" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-tab-pane" type="button" role="tab" aria-controls="results-tab-pane" aria-selected="{% if active_tab == 'results' %}true{% else %}false{% endif %}">경기 결과</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'predictions' %}active{% endif %}" id="predictions-tab" data-bs-toggle="tab" data-bs-target="#predictions-tab-pane" type="button" role="tab" aria-controls="predictions-tab-pane" aria-selected="{% if active_tab == 'predictions' %}true{% else %}false{% endif %}">주인장 예측</button>
               </li>
             </ul>
 
@@ -231,15 +263,17 @@
                           >
                             <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
                           </button>
-                          <div class="match-bet-label">
-                            <span class="text-dark">주인장 예측</span>
-                            <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{{ match.prediction_status_label }}</span>
-                          </div>
-                          <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
-                            <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
-                            <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
-                            <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
-                          </div>
+                          {% if can_set_match_bet or match.has_bet %}
+                            <div class="match-bet-label {% if not match.has_bet %}d-none{% endif %}">
+                              <span class="text-dark">주인장 예측</span>
+                              <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{% if match.result is not None %}{{ match.prediction_status_label }}{% endif %}</span>
+                            </div>
+                            <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
+                              <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
+                              <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
+                              <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
+                            </div>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -322,15 +356,17 @@
                           >
                             <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
                           </button>
-                          <div class="match-bet-label">
-                            <span class="text-dark">주인장 예측</span>
-                            <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{{ match.prediction_status_label }}</span>
-                          </div>
-                          <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
-                            <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
-                            <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
-                            <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
-                          </div>
+                          {% if can_set_match_bet or match.has_bet %}
+                            <div class="match-bet-label {% if not match.has_bet %}d-none{% endif %}">
+                              <span class="text-dark">주인장 예측</span>
+                              <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{% if match.result is not None %}{{ match.prediction_status_label }}{% endif %}</span>
+                            </div>
+                            <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
+                              <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
+                              <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
+                              <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
+                            </div>
+                          {% endif %}
                         </div>
                       </div>
                     </div>
@@ -379,6 +415,99 @@
                       {% if result_page_obj.has_next %}
                         <li class="page-item">
                           <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=results&result_page={{ result_page_obj.next_page_number }}">Next</a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled"><span class="page-link">Next</span></li>
+                      {% endif %}
+                    </ul>
+                  </nav>
+                {% endif %}
+              </div>
+
+              <div class="tab-pane fade {% if active_tab == 'predictions' %}show active{% endif %}" id="predictions-tab-pane" role="tabpanel" aria-labelledby="predictions-tab" tabindex="0">
+                <div class="list-group shadow-sm">
+                  {% for match in prediction_page_obj %}
+                    <div class="list-group-item py-2">
+                      <div class="d-flex justify-content-between align-items-center mb-2 match-summary-row">
+                        <div class="match-title-wrap pe-2">
+                          <span class="text-primary fw-bold me-2">[{{ match.round_num }}]</span>
+                          <a class="fw-semibold text-dark text-decoration-none match-title-link" href="https://www.google.com/search?q={{ match.home_team|urlencode }}%20vs%20{{ match.away_team|urlencode }}" target="_blank" rel="noopener">
+                            {{ match.home_team }} vs {{ match.away_team }}{% if match.score %} ({{ match.score }}){% endif %}
+                          </a>
+                        </div>
+                        <span class="fw-semibold text-dark match-date">{{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</span>
+                      </div>
+                      <div class="d-flex justify-content-between align-items-center small match-bet-row">
+                        <span class="text-dark">{{ match.league }}</span>
+                        <div class="d-flex align-items-center justify-content-end match-bet-controls">
+                          <button
+                            type="button"
+                            class="btn btn-link p-0 text-decoration-none d-flex align-items-center match-like-button"
+                            data-match-id="{{ match.id }}"
+                            onclick="toggleMatchLike(this, {{ match.id }})"
+                            aria-label="즐겨찾기"
+                          >
+                            <i class="bi {% if match.is_recommended %}bi-heart-fill{% else %}bi-heart{% endif %} text-danger"></i>
+                          </button>
+                          <div class="match-bet-label">
+                            <span class="text-dark">주인장 예측</span>
+                            {% if match.result is not None %}
+                              <span class="fw-bold match-bet-status {{ match.prediction_status_class }}" data-match-id="{{ match.id }}">{{ match.prediction_status_label }}</span>
+                            {% endif %}
+                          </div>
+                          <div class="d-flex match-bet-actions" role="group" aria-label="주인장 예측 선택">
+                            <button type="button" class="btn btn-sm {{ match.home_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 1 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="1" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>승</button>
+                            <button type="button" class="btn btn-sm {{ match.draw_button_class }} match-bet-button {% if match.has_bet and match.bet == 0 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="0" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>무</button>
+                            <button type="button" class="btn btn-sm {{ match.away_win_button_class }} match-bet-button {% if match.has_bet and match.bet == 2 %}active{% endif %}" data-match-id="{{ match.id }}" data-bet="2" onclick="setMatchBet(this)" {% if not can_set_match_bet or match.has_bet or match.result is not None %}disabled{% endif %}>패</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <div class="list-group-item text-secondary">등록된 주인장 예측 경기가 없습니다.</div>
+                  {% endfor %}
+                </div>
+
+                {% if prediction_page_obj.paginator.num_pages > 1 %}
+                  <nav class="mt-4">
+                    <ul class="pagination justify-content-center">
+                      {% if prediction_page_obj.has_previous %}
+                        <li class="page-item">
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ prediction_page_obj.previous_page_number }}">Prev</a>
+                        </li>
+                      {% else %}
+                        <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                      {% endif %}
+
+                      {% for i in prediction_page_obj.paginator.page_range %}
+                        {% if prediction_page_obj.paginator.num_pages <= 5 %}
+                          <li class="page-item {% if i == prediction_page_obj.number %}active{% endif %}">
+                            <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ i }}">{{ i }}</a>
+                          </li>
+                        {% elif prediction_page_obj.number <= 3 %}
+                          {% if i <= 5 %}
+                            <li class="page-item {% if i == prediction_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% elif prediction_page_obj.number > prediction_page_obj.paginator.num_pages|add:"-3" %}
+                          {% if i > prediction_page_obj.paginator.num_pages|add:"-5" %}
+                            <li class="page-item {% if i == prediction_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% else %}
+                          {% if i >= prediction_page_obj.number|add:"-2" and i <= prediction_page_obj.number|add:"2" %}
+                            <li class="page-item {% if i == prediction_page_obj.number %}active{% endif %}">
+                              <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ i }}">{{ i }}</a>
+                            </li>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+
+                      {% if prediction_page_obj.has_next %}
+                        <li class="page-item">
+                          <a class="page-link" href="?year={{ selected_year }}&league={{ selected_league|urlencode }}&tab=predictions&prediction_page={{ prediction_page_obj.next_page_number }}">Next</a>
                         </li>
                       {% else %}
                         <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -440,7 +569,11 @@
 
       document.querySelectorAll('#matchTab button[data-bs-toggle="tab"]').forEach((tabButton) => {
         tabButton.addEventListener('shown.bs.tab', (event) => {
-          const activeTab = event.target.id === 'results-tab' ? 'results' : 'schedule';
+          const activeTabMap = {
+            'results-tab': 'results',
+            'predictions-tab': 'predictions'
+          };
+          const activeTab = activeTabMap[event.target.id] || 'schedule';
           document.querySelectorAll('.active-tab-input').forEach((activeTabInput) => {
             activeTabInput.value = activeTab;
           });
@@ -507,6 +640,10 @@
 
       function applyMatchBetResponse(matchId, match) {
         document.querySelectorAll(`.match-bet-status[data-match-id="${matchId}"]`).forEach((status) => {
+          const label = status.closest('.match-bet-label');
+          if (label) {
+            label.classList.remove('d-none');
+          }
           status.textContent = match.status_label;
           status.classList.remove('text-secondary', 'text-dark', 'text-success', 'text-primary', 'text-danger');
           if (match.status_class) {

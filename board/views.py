@@ -108,9 +108,11 @@ def _match_bet_accuracy_stats():
         hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
     )
     completed_bet_count = stats['completed_bet_count'] or 0
+    hit_count = stats['hit_count'] or 0
     return {
         'completed_bet_count': completed_bet_count,
-        'accuracy': _format_accuracy_rate(stats['hit_count'] or 0, completed_bet_count),
+        'hit_count': hit_count,
+        'accuracy': _format_accuracy_rate(hit_count, completed_bet_count),
     }
 
 
@@ -1155,12 +1157,22 @@ def match_list(request):
         .exclude(score='')
         .order_by('-match_id')
     )
+    prediction_matches = (
+        SoccerMatch.objects.filter(
+            league=selected_league,
+            year=selected_year,
+            bet__isnull=False,
+        )
+        .order_by('-match_id')
+    )
     schedule_paginator = Paginator(scheduled_matches, 20)
     result_paginator = Paginator(result_matches, 20)
+    prediction_paginator = Paginator(prediction_matches, 20)
     schedule_page_obj = schedule_paginator.get_page(request.GET.get("schedule_page"))
     result_page_obj = result_paginator.get_page(request.GET.get("result_page"))
+    prediction_page_obj = prediction_paginator.get_page(request.GET.get("prediction_page"))
     active_tab = request.GET.get("tab")
-    if active_tab not in ["schedule", "results"]:
+    if active_tab not in ["schedule", "results", "predictions"]:
         active_tab = "schedule"
     recent_liked_matches = SoccerMatch.objects.filter(is_recommended=True).order_by("match_date", "id")[:TOP_MATCH_LIST_LIMIT]
     pending_bet_matches = (
@@ -1171,14 +1183,25 @@ def match_list(request):
         )
         .order_by("match_date", "id")[:TOP_MATCH_LIST_LIMIT]
     )
+    completed_bet_matches = (
+        SoccerMatch.objects.filter(
+            bet__isnull=False,
+            result__isnull=False,
+        )
+        .order_by("-match_date", "-id")[:TOP_MATCH_LIST_LIMIT]
+    )
     match_bet_accuracy_stats = _match_bet_accuracy_stats()
     context = {
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,
+        'prediction_page_obj': prediction_page_obj,
         'recent_liked_matches': recent_liked_matches,
         'pending_bet_matches': pending_bet_matches,
+        'completed_bet_matches': completed_bet_matches,
         'can_set_match_bet': _can_set_match_bet(request.user),
         'match_bet_count': match_bet_accuracy_stats['completed_bet_count'],
+        'match_bet_result_count': match_bet_accuracy_stats['completed_bet_count'],
+        'match_bet_hit_count': match_bet_accuracy_stats['hit_count'],
         'match_bet_accuracy': match_bet_accuracy_stats['accuracy'],
         'active_tab': active_tab,
         'match_years': match_years,

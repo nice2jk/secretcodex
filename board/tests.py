@@ -83,5 +83,5 @@ class MatchBetAccuracyTests(SimpleTestCase):
 
         self.assertEqual(
             _match_bet_accuracy_stats(),
-            {"completed_bet_count": 5, "accuracy": "40%"},
+            {"completed_bet_count": 5, "hit_count": 2, "accuracy": "40%"},
         )
