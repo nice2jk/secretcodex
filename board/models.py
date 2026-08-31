@@ -139,15 +139,17 @@ class SoccerMatch(models.Model):
     def prediction_status_class(self):
         if self.bet is None or self.result is None:
             return ''
-        return 'text-danger' if self.bet == self.result else 'text-success'
+        return 'text-primary' if self.bet == self.result else 'text-danger'
 
     def _prediction_button_class(self, value):
         if self.bet is not None and self.result is not None and self.bet == value and self.result == value:
-            return 'btn-danger'
-        if self.result is not None and self.result == value:
             return 'btn-primary'
         if self.bet is not None and self.bet == value:
             return 'btn-success'
+        if self.bet is not None and self.result is not None and self.result == value:
+            return 'btn-danger'
+        if self.result is not None and self.result == value:
+            return 'btn-primary'
         return 'btn-outline-dark'
 
     @property

@@ -1,9 +1,9 @@
 from django.test import SimpleTestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from board.models import SoccerMatch
 from board.templatetags.board_extras import render_post_content
-from board.views import _format_accuracy_rate, _match_bet_accuracy_stats
+from board.views import _format_accuracy_rate, _match_bet_accuracy_stats, _match_bet_accuracy_stats_by_league
 
 
 class RenderPostContentTests(SimpleTestCase):
@@ -52,15 +52,15 @@ class SoccerMatchPredictionStatusTests(SimpleTestCase):
         match = SoccerMatch(bet=SoccerMatch.OUTCOME_HOME_WIN, result=SoccerMatch.OUTCOME_HOME_WIN)
 
         self.assertEqual(match.prediction_status_label, "적중")
-        self.assertEqual(match.prediction_status_class, "text-danger")
-        self.assertEqual(match.home_win_button_class, "btn-danger")
+        self.assertEqual(match.prediction_status_class, "text-primary")
+        self.assertEqual(match.home_win_button_class, "btn-primary")
 
     def test_different_result_is_miss(self):
         match = SoccerMatch(bet=SoccerMatch.OUTCOME_AWAY_WIN, result=SoccerMatch.OUTCOME_DRAW)
 
         self.assertEqual(match.prediction_status_label, "실패")
-        self.assertEqual(match.prediction_status_class, "text-success")
-        self.assertEqual(match.draw_button_class, "btn-primary")
+        self.assertEqual(match.prediction_status_class, "text-danger")
+        self.assertEqual(match.draw_button_class, "btn-danger")
         self.assertEqual(match.away_win_button_class, "btn-success")
 
 
@@ -76,7 +76,9 @@ class MatchBetAccuracyTests(SimpleTestCase):
 
     @patch("board.views.SoccerMatch.objects")
     def test_accuracy_stats_include_completed_bet_count(self, soccer_match_objects):
-        soccer_match_objects.aggregate.return_value = {
+        matches = MagicMock()
+        soccer_match_objects.all.return_value = matches
+        matches.aggregate.return_value = {
             "completed_bet_count": 5,
             "hit_count": 2,
         }
@@ -85,3 +87,52 @@ class MatchBetAccuracyTests(SimpleTestCase):
             _match_bet_accuracy_stats(),
             {"completed_bet_count": 5, "hit_count": 2, "accuracy": "40%"},
         )
+        soccer_match_objects.all.assert_called_once_with()
+        matches.filter.assert_not_called()
+
+    @patch("board.views.SoccerMatch.objects")
+    def test_accuracy_stats_can_be_scoped_by_year_and_league(self, soccer_match_objects):
+        matches = MagicMock()
+        year_matches = MagicMock()
+        league_matches = MagicMock()
+        soccer_match_objects.all.return_value = matches
+        matches.filter.return_value = year_matches
+        year_matches.filter.return_value = league_matches
+        league_matches.aggregate.return_value = {
+            "completed_bet_count": 4,
+            "hit_count": 3,
+        }
+
+        self.assertEqual(
+            _match_bet_accuracy_stats(year=2026, league="프리미어리그"),
+            {"completed_bet_count": 4, "hit_count": 3, "accuracy": "75%"},
+        )
+        matches.filter.assert_called_once_with(year=2026)
+        year_matches.filter.assert_called_once_with(league="프리미어리그")
+
+    @patch("board.views.SoccerMatch.objects")
+    def test_accuracy_stats_by_league_includes_empty_leagues(self, soccer_match_objects):
+        matches = MagicMock()
+        values = MagicMock()
+        soccer_match_objects.filter.return_value = matches
+        matches.values.return_value = values
+        values.annotate.return_value = [
+            {
+                "league": "프리미어리그",
+                "completed_bet_count": 5,
+                "hit_count": 3,
+            },
+        ]
+
+        self.assertEqual(
+            _match_bet_accuracy_stats_by_league(2026, ["프리미어리그", "라리가"]),
+            {
+                "프리미어리그": {"completed_bet_count": 5, "hit_count": 3, "accuracy": "60%"},
+                "라리가": {"completed_bet_count": 0, "hit_count": 0, "accuracy": "0%"},
+            },
+        )
+        soccer_match_objects.filter.assert_called_once_with(
+            year=2026,
+            league__in=["프리미어리그", "라리가"],
+        )
+        matches.values.assert_called_once_with("league")

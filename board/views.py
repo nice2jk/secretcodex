@@ -102,18 +102,49 @@ def _format_accuracy_rate(hit_count, completed_bet_count):
     return f'{rate:.1f}%'
 
 
-def _match_bet_accuracy_stats():
-    stats = SoccerMatch.objects.aggregate(
-        completed_bet_count=Count('id', filter=Q(bet__isnull=False, result__isnull=False)),
-        hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
-    )
-    completed_bet_count = stats['completed_bet_count'] or 0
-    hit_count = stats['hit_count'] or 0
+def _match_bet_accuracy_summary(completed_bet_count, hit_count):
+    completed_bet_count = completed_bet_count or 0
+    hit_count = hit_count or 0
     return {
         'completed_bet_count': completed_bet_count,
         'hit_count': hit_count,
         'accuracy': _format_accuracy_rate(hit_count, completed_bet_count),
     }
+
+
+def _match_bet_accuracy_stats(year=None, league=None):
+    matches = SoccerMatch.objects.all()
+    if year is not None:
+        matches = matches.filter(year=year)
+    if league is not None:
+        matches = matches.filter(league=league)
+
+    stats = matches.aggregate(
+        completed_bet_count=Count('id', filter=Q(bet__isnull=False, result__isnull=False)),
+        hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
+    )
+    return _match_bet_accuracy_summary(stats['completed_bet_count'], stats['hit_count'])
+
+
+def _match_bet_accuracy_stats_by_league(year, leagues):
+    stats_by_league = {
+        league: _match_bet_accuracy_summary(0, 0)
+        for league in leagues
+    }
+    rows = (
+        SoccerMatch.objects.filter(year=year, league__in=leagues)
+        .values('league')
+        .annotate(
+            completed_bet_count=Count('id', filter=Q(bet__isnull=False, result__isnull=False)),
+            hit_count=Count('id', filter=Q(bet__isnull=False, result=F('bet'))),
+        )
+    )
+    for row in rows:
+        stats_by_league[row['league']] = _match_bet_accuracy_summary(
+            row['completed_bet_count'],
+            row['hit_count'],
+        )
+    return stats_by_league
 
 
 def home(request):
@@ -1143,6 +1174,10 @@ def match_list(request):
     if selected_league not in league_values:
         selected_league = league_values[0]
 
+    league_accuracy_stats = _match_bet_accuracy_stats_by_league(selected_year, league_values)
+    for league in match_leagues:
+        league["bet_stats"] = league_accuracy_stats[league["value"]]
+
     scheduled_matches = SoccerMatch.objects.filter(
         Q(score__isnull=True) | Q(score=''),
         league=selected_league,
@@ -1178,6 +1213,8 @@ def match_list(request):
     pending_bet_matches = (
         SoccerMatch.objects.filter(
             Q(score__isnull=True) | Q(score=''),
+            league=selected_league,
+            year=selected_year,
             bet__isnull=False,
             result__isnull=True,
         )
@@ -1185,12 +1222,14 @@ def match_list(request):
     )
     completed_bet_matches = (
         SoccerMatch.objects.filter(
+            league=selected_league,
+            year=selected_year,
             bet__isnull=False,
             result__isnull=False,
         )
         .order_by("-match_date", "-id")[:TOP_MATCH_LIST_LIMIT]
     )
-    match_bet_accuracy_stats = _match_bet_accuracy_stats()
+    match_bet_accuracy_stats = _match_bet_accuracy_stats(year=selected_year)
     context = {
         'schedule_page_obj': schedule_page_obj,
         'result_page_obj': result_page_obj,

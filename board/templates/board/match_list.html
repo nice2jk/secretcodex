@@ -172,7 +172,7 @@
                           </a>
                           <div class="d-flex align-items-center gap-1 flex-shrink-0">
                             <span class="badge {% if match.bet == 1 %}text-bg-primary{% elif match.bet == 0 %}text-bg-dark{% else %}text-bg-success{% endif %}">예측 {{ match.get_bet_display }}</span>
-                            <span class="badge {% if match.bet == match.result %}text-bg-danger{% else %}text-bg-secondary{% endif %}">{{ match.prediction_status_label }}</span>
+                            <span class="badge {% if match.bet == match.result %}text-bg-primary{% else %}text-bg-danger{% endif %}">{{ match.prediction_status_label }}</span>
                           </div>
                         </div>
                         <div class="text-secondary" style="font-size: 0.75rem;">{{ match.league }} · {{ match.match_date|timezone:"Asia/Seoul"|date:"Y-m-d H:i" }}</div>
@@ -193,7 +193,7 @@
                 <input type="hidden" name="tab" value="{{ active_tab }}" class="active-tab-input">
                 <input type="hidden" name="league" value="{{ selected_league }}">
                 <div class="small fw-semibold text-nowrap">
-                  <span class="text-dark">주인장 적중률 ({{ match_bet_hit_count }} / {{ match_bet_result_count }}) : </span>
+                  <span class="text-dark">주인장 ({{ match_bet_hit_count }} / {{ match_bet_result_count }}) : </span>
                   <span class="text-danger">{{ match_bet_accuracy }}</span>
                 </div>
                 <label for="match-year-select" class="visually-hidden">연도 선택</label>
@@ -218,7 +218,10 @@
                       class="btn {% if league.value == selected_league %}text-white{% else %}btn-outline-dark{% endif %} w-100 fw-semibold text-wrap lh-sm py-2"
                       style="{% if league.value == selected_league %}background-color: #495057; border-color: #495057;{% endif %}"
                     >
-                      {{ league.label }}
+                      <span class="d-block">{{ league.label }}</span>
+                      <span class="d-block small fw-normal mt-1 {% if league.value == selected_league %}text-white-50{% else %}text-secondary{% endif %}">
+                        주인장 ({{ league.bet_stats.hit_count }} / {{ league.bet_stats.completed_bet_count }}) : {{ league.bet_stats.accuracy }}
+                      </span>
                     </button>
                   </div>
                 {% endfor %}
