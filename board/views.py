@@ -1082,7 +1082,8 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 if form.cleaned_data.get('remember_me'):
-                    request.session.set_expiry(settings.REMEMBER_ME_SESSION_COOKIE_AGE)
+                    remember_me_age = getattr(settings, 'REMEMBER_ME_SESSION_COOKIE_AGE', 1209600)
+                    request.session.set_expiry(remember_me_age)
                 else:
                     request.session.set_expiry(settings.SESSION_COOKIE_AGE)
                 if hasattr(user, 'profile') and user.profile.is_temporary_password:
