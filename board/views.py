@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
@@ -1080,6 +1081,10 @@ def login_view(request):
             user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
+                if form.cleaned_data.get('remember_me'):
+                    request.session.set_expiry(settings.REMEMBER_ME_SESSION_COOKIE_AGE)
+                else:
+                    request.session.set_expiry(settings.SESSION_COOKIE_AGE)
                 if hasattr(user, 'profile') and user.profile.is_temporary_password:
                     return redirect("board:password_change")
                 if next_url:

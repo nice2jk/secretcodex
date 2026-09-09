@@ -1,6 +1,7 @@
 from django.test import SimpleTestCase
 from unittest.mock import MagicMock, patch
 
+from board.forms import LoginForm
 from board.models import SoccerMatch
 from board.templatetags.board_extras import render_post_content
 from board.views import _format_accuracy_rate, _match_bet_accuracy_stats, _match_bet_accuracy_stats_by_league
@@ -25,6 +26,20 @@ class RenderPostContentTests(SimpleTestCase):
         )
 
         self.assertEqual(rendered.count("https://www.youtube.com/embed/dQw4w9WgXcQ"), 1)
+
+
+class LoginFormRememberMeTests(SimpleTestCase):
+    def test_remember_me_defaults_to_false(self):
+        form = LoginForm(data={"email": "user@example.com", "password": "secret"})
+
+        self.assertTrue(form.is_valid())
+        self.assertFalse(form.cleaned_data["remember_me"])
+
+    def test_remember_me_accepts_checked_value(self):
+        form = LoginForm(data={"email": "user@example.com", "password": "secret", "remember_me": "on"})
+
+        self.assertTrue(form.is_valid())
+        self.assertTrue(form.cleaned_data["remember_me"])
 
 
 class SoccerMatchPredictionStatusTests(SimpleTestCase):

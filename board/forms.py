@@ -108,6 +108,11 @@ class SignUpForm(forms.ModelForm):
 class LoginForm(forms.Form):
     email = forms.EmailField(label="이메일", widget=forms.EmailInput(attrs={'class': 'form-control'}))
     password = forms.CharField(label="비밀번호", widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    remember_me = forms.BooleanField(
+        label="로그인 상태 유지",
+        required=False,
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+    )
 
 class PasswordResetForm(forms.Form):
     email = forms.EmailField(label="이메일", widget=forms.EmailInput(attrs={'class': 'form-control'}))
