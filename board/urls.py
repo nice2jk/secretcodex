@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import TemplateView
 
 from . import views
@@ -6,6 +6,7 @@ from . import views
 app_name = "board"
 
 urlpatterns = [
+    path("api/v1/", include("board.api_urls")),
     path("", views.home, name="home"),
     path("board/", views.post_list, name="post_list"),
     path("board/new/", views.post_create, name="post_create"),
