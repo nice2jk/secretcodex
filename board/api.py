@@ -28,6 +28,7 @@ from .views import (
 
 API_TOKEN_SALT = "board.api.auth"
 API_TOKEN_MAX_AGE = getattr(settings, "API_TOKEN_MAX_AGE", 60 * 60 * 24 * 14)
+SSUL_POST_CATEGORY = "common"
 POST_CATEGORIES = {"common", "secret"}
 INFO_CATEGORIES = {"thread", "ai"}
 LINK_CATEGORIES = {choice[0] for choice in LinkPost.CATEGORY_CHOICES}
@@ -293,6 +294,160 @@ def _validate_link_payload(data, partial=False):
     return errors
 
 
+def _list_posts(request, category):
+    if category not in POST_CATEGORIES:
+        return _error("Invalid category")
+    if category == "secret" and not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+
+    queryset = (
+        Post.objects.filter(category=category)
+        .annotate(like_count=Count("likes"))
+        .prefetch_related("images", "likes")
+        .order_by("-id")
+    )
+    query = request.GET.get("q", "").strip()
+    if query:
+        queryset = queryset.filter(Q(title__icontains=query) | Q(content__icontains=query) | Q(author__icontains=query))
+    if request.GET.get("recommended") == "1":
+        queryset = queryset.filter(like_count__gt=0).order_by("-like_count", "-id")
+    page_obj, pagination = _paginate(request, queryset)
+    return _json_response({"results": [_serialize_post(request, post) for post in page_obj], "pagination": pagination})
+
+
+def _create_post(request, fixed_category=None):
+    try:
+        data = _parse_payload(request)
+    except ValueError:
+        return _error("Invalid JSON")
+
+    category = fixed_category or data.get("category", SSUL_POST_CATEGORY)
+    if category not in POST_CATEGORIES:
+        return _error("Invalid category")
+    if category == "secret" and not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+
+    errors = _validate_post_payload(data)
+    images = request.FILES.getlist("images")
+    if len(images) > 3:
+        errors["images"] = ["이미지는 최대 3장까지 업로드할 수 있습니다."]
+    if errors:
+        return _error("Validation failed", errors=errors)
+
+    post = Post.objects.create(
+        title=str(data["title"]).strip(),
+        content=str(data["content"]).strip(),
+        category=category,
+        author=_get_display_name(request.api_user) if request.api_user.is_authenticated else "익명",
+    )
+    for image in images[:3]:
+        PostImage.objects.create(post=post, image=image)
+    if request.api_user.is_authenticated and hasattr(request.api_user, "profile"):
+        request.api_user.profile.points += 10
+        request.api_user.profile.save(update_fields=["points"])
+    return _json_response({"post": _serialize_post(request, post, detail=True)}, status=201)
+
+
+def _get_post(post_id, category=None, queryset=None):
+    if queryset is None:
+        queryset = Post.objects.all()
+    if category is not None:
+        queryset = queryset.filter(category=category)
+    return get_object_or_404(queryset, id=post_id)
+
+
+def _post_detail_response(request, post_id, category=None):
+    queryset = Post.objects.prefetch_related("images", "likes", "comments")
+    post = _get_post(post_id, category=category, queryset=queryset)
+    if post.category == "secret" and not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+
+    if request.method == "GET":
+        post.views = F("views") + 1
+        post.save(update_fields=["views"])
+        post.refresh_from_db()
+        return _json_response({"post": _serialize_post(request, post, detail=True)})
+
+    if not _is_named_author(request.api_user, post.author):
+        return _error("Permission denied", status=403)
+
+    if request.method == "DELETE":
+        post.delete()
+        return _json_response({"message": "success"})
+
+    try:
+        data = _parse_payload(request)
+    except ValueError:
+        return _error("Invalid JSON")
+
+    errors = _validate_post_payload(data, partial=True)
+    existing_count = post.images.count()
+    remaining = max(0, 3 - existing_count)
+    images = request.FILES.getlist("images")
+    if len(images) > remaining:
+        errors["images"] = [f"이미지는 최대 3장까지 업로드할 수 있습니다. 현재 {existing_count}장 등록됨."]
+    if errors:
+        return _error("Validation failed", errors=errors)
+
+    if "title" in data:
+        post.title = str(data["title"]).strip()
+    if "content" in data:
+        post.content = str(data["content"]).strip()
+    post.save()
+    for image in images[:remaining]:
+        PostImage.objects.create(post=post, image=image)
+    return _json_response({"post": _serialize_post(request, post, detail=True)})
+
+
+def _post_image_detail_response(request, post_id, image_id, category=None):
+    post = _get_post(post_id, category=category)
+    if not _is_named_author(request.api_user, post.author):
+        return _error("Permission denied", status=403)
+    image = get_object_or_404(PostImage, id=image_id, post=post)
+    image.delete()
+    return _json_response({"message": "success"})
+
+
+def _post_like_response(request, post_id, category=None):
+    post = _get_post(post_id, category=category)
+    if post.category == "secret" and not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+    if post.likes.filter(id=request.api_user.id).exists():
+        post.likes.remove(request.api_user)
+        is_liked = False
+    else:
+        post.likes.add(request.api_user)
+        is_liked = True
+    return _json_response({"like_count": post.likes.count(), "is_liked": is_liked})
+
+
+def _comments_response(request, post_id, category=None):
+    post = _get_post(post_id, category=category)
+    if post.category == "secret" and not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+
+    if request.method == "GET":
+        queryset = post.comments.order_by("created_at")
+        page_obj, pagination = _paginate(request, queryset)
+        return _json_response({"results": [_serialize_comment(comment, request.api_user) for comment in page_obj], "pagination": pagination})
+
+    if not request.api_user.is_authenticated:
+        return _error("Authentication required", status=401)
+    try:
+        data = _parse_payload(request)
+    except ValueError:
+        return _error("Invalid JSON")
+    content = str(data.get("content", "")).strip()
+    if not content:
+        return _error("내용을 입력하세요.")
+
+    comment = Comment.objects.create(post=post, author=_get_display_name(request.api_user), content=content)
+    if hasattr(request.api_user, "profile"):
+        request.api_user.profile.points += 3
+        request.api_user.profile.save(update_fields=["points"])
+    return _json_response({"comment": _serialize_comment(comment, request.api_user)}, status=201)
+
+
 @_api_view(["GET"])
 def api_root(request):
     return _json_response(
@@ -303,6 +458,7 @@ def api_root(request):
                 "auth": "/api/v1/auth/",
                 "home": "/api/v1/home/",
                 "posts": "/api/v1/posts/",
+                "ssul_posts": "/api/v1/ssul-posts/",
                 "info_posts": "/api/v1/info-posts/",
                 "link_posts": "/api/v1/link-posts/",
                 "matches": "/api/v1/matches/",
@@ -462,145 +618,55 @@ def home(request):
 def posts(request):
     if request.method == "GET":
         category = request.GET.get("category", "common")
-        if category not in POST_CATEGORIES:
-            return _error("Invalid category")
-        if category == "secret" and not request.api_user.is_authenticated:
-            return _error("Authentication required", status=401)
+        return _list_posts(request, category)
+    return _create_post(request)
 
-        queryset = Post.objects.filter(category=category).annotate(like_count=Count("likes")).prefetch_related("images", "likes").order_by("-id")
-        query = request.GET.get("q", "").strip()
-        if query:
-            queryset = queryset.filter(Q(title__icontains=query) | Q(content__icontains=query) | Q(author__icontains=query))
-        if request.GET.get("recommended") == "1":
-            queryset = queryset.filter(like_count__gt=0).order_by("-like_count", "-id")
-        page_obj, pagination = _paginate(request, queryset)
-        return _json_response({"results": [_serialize_post(request, post) for post in page_obj], "pagination": pagination})
 
-    try:
-        data = _parse_payload(request)
-    except ValueError:
-        return _error("Invalid JSON")
-
-    category = data.get("category", "common")
-    if category not in POST_CATEGORIES:
-        return _error("Invalid category")
-    if category == "secret" and not request.api_user.is_authenticated:
-        return _error("Authentication required", status=401)
-
-    errors = _validate_post_payload(data)
-    images = request.FILES.getlist("images")
-    if len(images) > 3:
-        errors["images"] = ["이미지는 최대 3장까지 업로드할 수 있습니다."]
-    if errors:
-        return _error("Validation failed", errors=errors)
-
-    post = Post.objects.create(
-        title=str(data["title"]).strip(),
-        content=str(data["content"]).strip(),
-        category=category,
-        author=_get_display_name(request.api_user) if request.api_user.is_authenticated else "익명",
-    )
-    for image in images[:3]:
-        PostImage.objects.create(post=post, image=image)
-    if request.api_user.is_authenticated and hasattr(request.api_user, "profile"):
-        request.api_user.profile.points += 10
-        request.api_user.profile.save(update_fields=["points"])
-    return _json_response({"post": _serialize_post(request, post, detail=True)}, status=201)
+@_api_view(["GET", "POST"])
+def ssul_posts(request):
+    if request.method == "GET":
+        return _list_posts(request, SSUL_POST_CATEGORY)
+    return _create_post(request, fixed_category=SSUL_POST_CATEGORY)
 
 
 @_api_view(["GET", "PATCH", "DELETE"])
 def post_detail(request, post_id):
-    post = get_object_or_404(Post.objects.prefetch_related("images", "likes", "comments"), id=post_id)
-    if post.category == "secret" and not request.api_user.is_authenticated:
-        return _error("Authentication required", status=401)
+    return _post_detail_response(request, post_id)
 
-    if request.method == "GET":
-        post.views = F("views") + 1
-        post.save(update_fields=["views"])
-        post.refresh_from_db()
-        return _json_response({"post": _serialize_post(request, post, detail=True)})
 
-    if not _is_named_author(request.api_user, post.author):
-        return _error("Permission denied", status=403)
-
-    if request.method == "DELETE":
-        post.delete()
-        return _json_response({"message": "success"})
-
-    try:
-        data = _parse_payload(request)
-    except ValueError:
-        return _error("Invalid JSON")
-
-    errors = _validate_post_payload(data, partial=True)
-    existing_count = post.images.count()
-    remaining = max(0, 3 - existing_count)
-    images = request.FILES.getlist("images")
-    if len(images) > remaining:
-        errors["images"] = [f"이미지는 최대 3장까지 업로드할 수 있습니다. 현재 {existing_count}장 등록됨."]
-    if errors:
-        return _error("Validation failed", errors=errors)
-
-    if "title" in data:
-        post.title = str(data["title"]).strip()
-    if "content" in data:
-        post.content = str(data["content"]).strip()
-    post.save()
-    for image in images[:remaining]:
-        PostImage.objects.create(post=post, image=image)
-    return _json_response({"post": _serialize_post(request, post, detail=True)})
+@_api_view(["GET", "PATCH", "DELETE"])
+def ssul_post_detail(request, post_id):
+    return _post_detail_response(request, post_id, category=SSUL_POST_CATEGORY)
 
 
 @_api_view(["DELETE"], require_auth=True)
 def post_image_detail(request, post_id, image_id):
-    post = get_object_or_404(Post, id=post_id)
-    if not _is_named_author(request.api_user, post.author):
-        return _error("Permission denied", status=403)
-    image = get_object_or_404(PostImage, id=image_id, post=post)
-    image.delete()
-    return _json_response({"message": "success"})
+    return _post_image_detail_response(request, post_id, image_id)
+
+
+@_api_view(["DELETE"], require_auth=True)
+def ssul_post_image_detail(request, post_id, image_id):
+    return _post_image_detail_response(request, post_id, image_id, category=SSUL_POST_CATEGORY)
 
 
 @_api_view(["POST"], require_auth=True)
 def post_like(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    if post.category == "secret" and not request.api_user.is_authenticated:
-        return _error("Authentication required", status=401)
-    if post.likes.filter(id=request.api_user.id).exists():
-        post.likes.remove(request.api_user)
-        is_liked = False
-    else:
-        post.likes.add(request.api_user)
-        is_liked = True
-    return _json_response({"like_count": post.likes.count(), "is_liked": is_liked})
+    return _post_like_response(request, post_id)
+
+
+@_api_view(["POST"], require_auth=True)
+def ssul_post_like(request, post_id):
+    return _post_like_response(request, post_id, category=SSUL_POST_CATEGORY)
 
 
 @_api_view(["GET", "POST"])
 def comments(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    if post.category == "secret" and not request.api_user.is_authenticated:
-        return _error("Authentication required", status=401)
+    return _comments_response(request, post_id)
 
-    if request.method == "GET":
-        queryset = post.comments.order_by("created_at")
-        page_obj, pagination = _paginate(request, queryset)
-        return _json_response({"results": [_serialize_comment(comment, request.api_user) for comment in page_obj], "pagination": pagination})
 
-    if not request.api_user.is_authenticated:
-        return _error("Authentication required", status=401)
-    try:
-        data = _parse_payload(request)
-    except ValueError:
-        return _error("Invalid JSON")
-    content = str(data.get("content", "")).strip()
-    if not content:
-        return _error("내용을 입력하세요.")
-
-    comment = Comment.objects.create(post=post, author=_get_display_name(request.api_user), content=content)
-    if hasattr(request.api_user, "profile"):
-        request.api_user.profile.points += 3
-        request.api_user.profile.save(update_fields=["points"])
-    return _json_response({"comment": _serialize_comment(comment, request.api_user)}, status=201)
+@_api_view(["GET", "POST"])
+def ssul_comments(request, post_id):
+    return _comments_response(request, post_id, category=SSUL_POST_CATEGORY)
 
 
 @_api_view(["DELETE"], require_auth=True)

@@ -58,6 +58,35 @@ GET /api/v1/home/
 
 Returns recent board posts, thread posts, AI news, recommended posts, popular links, and recent best links.
 
+## Ssul Posts
+
+These endpoints are dedicated to `썰게시판` and always use the `common` post category.
+
+Endpoints:
+
+```text
+GET    /api/v1/ssul-posts/?page=1&q=검색어
+POST   /api/v1/ssul-posts/
+GET    /api/v1/ssul-posts/{id}/
+PATCH  /api/v1/ssul-posts/{id}/
+DELETE /api/v1/ssul-posts/{id}/
+DELETE /api/v1/ssul-posts/{id}/images/{image_id}/
+POST   /api/v1/ssul-posts/{id}/like/
+GET    /api/v1/ssul-posts/{id}/comments/
+POST   /api/v1/ssul-posts/{id}/comments/
+```
+
+Create JSON body:
+
+```json
+{
+  "title": "제목",
+  "content": "내용"
+}
+```
+
+For image upload, send `multipart/form-data` with fields `title`, `content`, and up to three `images` files.
+
 ## Posts
 
 Categories:

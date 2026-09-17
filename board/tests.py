@@ -1,10 +1,98 @@
+import shutil
+import tempfile
 from django.test import SimpleTestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase, override_settings
 from unittest.mock import MagicMock, patch
 
 from board.forms import LoginForm
-from board.models import SoccerMatch
+from board.models import Post, SoccerMatch
 from board.templatetags.board_extras import render_post_content
 from board.views import _format_accuracy_rate, _match_bet_accuracy_stats, _match_bet_accuracy_stats_by_league
+
+
+class SsulPostApiTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls._media_root = tempfile.mkdtemp()
+        cls._override_settings = override_settings(ALLOWED_HOSTS=["testserver"], MEDIA_ROOT=cls._media_root)
+        cls._override_settings.enable()
+        super().setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        cls._override_settings.disable()
+        shutil.rmtree(cls._media_root, ignore_errors=True)
+
+    def setUp(self):
+        self.client = Client()
+
+    def _image(self, name):
+        return SimpleUploadedFile(name, b"image-content", content_type="image/jpeg")
+
+    def test_ssul_list_returns_common_posts_only(self):
+        common_post = Post.objects.create(title="썰 제목", content="썰 내용", category="common")
+        Post.objects.create(title="비밀 제목", content="비밀 내용", category="secret")
+
+        response = self.client.get("/api/v1/ssul-posts/")
+
+        self.assertEqual(response.status_code, 200)
+        post_ids = [post["id"] for post in response.json()["results"]]
+        self.assertEqual(post_ids, [common_post.id])
+
+    def test_ssul_detail_returns_post_and_increments_views(self):
+        post = Post.objects.create(title="읽을 글", content="본문", category="common")
+
+        response = self.client.get(f"/api/v1/ssul-posts/{post.id}/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["post"]["id"], post.id)
+        post.refresh_from_db()
+        self.assertEqual(post.views, 1)
+
+    def test_ssul_detail_does_not_expose_secret_posts(self):
+        post = Post.objects.create(title="비밀 글", content="본문", category="secret")
+
+        response = self.client.get(f"/api/v1/ssul-posts/{post.id}/")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_ssul_create_accepts_up_to_three_images(self):
+        response = self.client.post(
+            "/api/v1/ssul-posts/",
+            {
+                "title": "사진 글",
+                "content": "사진 본문",
+                "category": "secret",
+                "images": [self._image("one.jpg"), self._image("two.jpg"), self._image("three.jpg")],
+            },
+        )
+
+        self.assertEqual(response.status_code, 201)
+        post = Post.objects.get()
+        self.assertEqual(post.category, "common")
+        self.assertEqual(post.images.count(), 3)
+        self.assertEqual(len(response.json()["post"]["images"]), 3)
+
+    def test_ssul_create_rejects_more_than_three_images(self):
+        response = self.client.post(
+            "/api/v1/ssul-posts/",
+            {
+                "title": "사진 글",
+                "content": "사진 본문",
+                "images": [
+                    self._image("one.jpg"),
+                    self._image("two.jpg"),
+                    self._image("three.jpg"),
+                    self._image("four.jpg"),
+                ],
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Post.objects.count(), 0)
+        self.assertIn("images", response.json()["errors"])
 
 
 class RenderPostContentTests(SimpleTestCase):
