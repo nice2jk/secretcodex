@@ -1,7 +1,8 @@
 ﻿import json
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlencode
 from zoneinfo import ZoneInfo
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -9,6 +10,8 @@ from django.conf import settings
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import JsonResponse
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
@@ -23,12 +26,41 @@ from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, Socce
 MAX_FAVORITE_MATCHES = 10
 TOP_MATCH_LIST_LIMIT = 7
 MATCH_BET_VALUES = {0, 1, 2}
+NADA_PASSWORD = "0099ppoo"
+NADA_SESSION_KEY = "nada_menu_unlocked"
+NADA_ADMIN_NICKNAME = "admin"
 
 
 def _get_display_name(user):
     if hasattr(user, "profile"):
         return user.profile.nickname
     return user.get_username()
+
+
+def _is_nada_admin(user):
+    return user.is_authenticated and hasattr(user, "profile") and user.profile.nickname == NADA_ADMIN_NICKNAME
+
+
+def _has_nada_access(request):
+    return bool(request.session.get(NADA_SESSION_KEY))
+
+
+def _redirect_to_nada_password(request):
+    query = urlencode({"next": request.get_full_path()})
+    return redirect(f"{reverse('board:nada_password')}?{query}")
+
+
+def _safe_nada_next_url(request):
+    next_url = request.POST.get("next") or request.GET.get("next") or reverse("board:menu5")
+    if not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return reverse("board:menu5")
+    if next_url == reverse("board:nada_password"):
+        return reverse("board:menu5")
+    return next_url
 
 
 def _save_post_images(post, images, remaining):
@@ -230,6 +262,8 @@ def post_create(request):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    if post.category == 'secret':
+        return redirect("board:secret_detail", post_id=post.id)
     post.views += 1
     post.save()
     if request.method == "POST":
@@ -262,6 +296,8 @@ def post_detail(request, post_id):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    if post.category == "secret":
+        return redirect("board:secret_edit", post_id=post.id)
     if _get_display_name(request.user) != post.author:
         return redirect("board:post_detail", post_id=post.id)
     if request.method == "POST":
@@ -298,9 +334,16 @@ def post_edit(request, post_id):
 @login_required
 def post_image_delete(request, post_id, image_id):
     post = get_object_or_404(Post, id=post_id)
-    if _get_display_name(request.user) != post.author:
-        if post.category == "secret":
+    if post.category == "secret":
+        if not _has_nada_access(request):
+            return _redirect_to_nada_password(request)
+        if not _is_nada_admin(request.user):
             return redirect("board:secret_detail", post_id=post.id)
+        image = get_object_or_404(PostImage, id=image_id, post=post)
+        if request.method == "POST":
+            image.delete()
+        return redirect("board:secret_edit", post_id=post.id)
+    if _get_display_name(request.user) != post.author:
         return redirect("board:post_detail", post_id=post.id)
     image = get_object_or_404(PostImage, id=image_id, post=post)
     if request.method == "POST":
@@ -313,6 +356,8 @@ def post_image_delete(request, post_id, image_id):
 @login_required
 def post_delete(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    if post.category == "secret":
+        return redirect("board:secret_detail", post_id=post.id)
     if _get_display_name(request.user) != post.author:
         return redirect("board:post_detail", post_id=post.id)
     if request.method == "POST":
@@ -656,7 +701,26 @@ def menu4(request):
 
 
 @login_required
+def nada_password(request):
+    next_url = _safe_nada_next_url(request)
+    if request.method == "POST":
+        if request.POST.get("password") == NADA_PASSWORD:
+            request.session[NADA_SESSION_KEY] = True
+            return redirect(next_url)
+        messages.error(request, "비밀번호가 틀렸습니다. 다시 입력해 주세요.")
+
+    return render(
+        request,
+        "board/nada_password.html",
+        {"next": next_url},
+    )
+
+
+@login_required
 def menu5(request):
+    if not _has_nada_access(request):
+        return _redirect_to_nada_password(request)
+
     links = Post.objects.filter(category='secret').order_by("-id")
     query = request.GET.get("q", "").strip()
     if query:
@@ -690,11 +754,17 @@ def menu5(request):
             "page_obj": page_obj,
             "query": query,
             "recent_popular": recent_popular,
+            "is_nada_admin": _is_nada_admin(request.user),
         },
     )
 
 @login_required
 def secret_create(request):
+    if not _has_nada_access(request):
+        return _redirect_to_nada_password(request)
+    if not _is_nada_admin(request.user):
+        return redirect("board:menu5")
+
     if request.method == "POST":
         form = PostForm(request.POST)
         if form.is_valid():
@@ -721,6 +791,9 @@ def secret_create(request):
 
 @login_required
 def secret_detail(request, post_id):
+    if not _has_nada_access(request):
+        return _redirect_to_nada_password(request)
+
     post = get_object_or_404(Post, id=post_id)
     if post.category != 'secret':
         return redirect("board:post_detail", post_id=post.id)
@@ -740,7 +813,7 @@ def secret_detail(request, post_id):
             return redirect("board:secret_detail", post_id=post.id)
     else:
         form = CommentForm()
-    is_author = request.user.is_authenticated and _get_display_name(request.user) == post.author
+    is_author = _is_nada_admin(request.user)
 
     previous_post = Post.objects.filter(category=post.category, id__lt=post.id).order_by('-id').first()
     next_post = Post.objects.filter(category=post.category, id__gt=post.id).order_by('id').first()
@@ -753,8 +826,11 @@ def secret_detail(request, post_id):
 
 @login_required
 def secret_edit(request, post_id):
+    if not _has_nada_access(request):
+        return _redirect_to_nada_password(request)
+
     post = get_object_or_404(Post, id=post_id)
-    if _get_display_name(request.user) != post.author:
+    if not _is_nada_admin(request.user):
         return redirect("board:secret_detail", post_id=post.id)
     if request.method == "POST":
         form = PostForm(request.POST, instance=post)
@@ -788,8 +864,11 @@ def secret_edit(request, post_id):
 
 @login_required
 def secret_delete(request, post_id):
+    if not _has_nada_access(request):
+        return _redirect_to_nada_password(request)
+
     post = get_object_or_404(Post, id=post_id)
-    if _get_display_name(request.user) == post.author and request.method == "POST":
+    if _is_nada_admin(request.user) and request.method == "POST":
         post.delete()
         return redirect("board:menu5")
     return redirect("board:secret_detail", post_id=post.id)

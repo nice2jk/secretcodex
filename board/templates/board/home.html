@@ -74,7 +74,9 @@
                 </ul>
               </li>
               <li class="nav-item"><a class="nav-link" href="/matches/">해외축구</a></li>
-              <li class="nav-item"><a class="nav-link" href="/menu5/">Nada</a></li>
+              {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link" href="/menu5/">Nada</a></li>
+              {% endif %}
             </ul>
           </div>
         </nav>
@@ -89,7 +91,7 @@
           <div class="col-lg-10 col-xl-8">
             <div class="px-4 py-4 home-welcome-box rounded-4 shadow-sm border border-5">
               <h2 class="fs-4 fw-bold mb-2">Welcome to 쓰잘데기</h2>
-              <p class="small text-danger fw-bold mb-4">로그인을 하시면 Nada 게시판 사용 가능합니다.</p>
+              <p class="small text-danger fw-bold mb-4">로그인을 하시면 게시판 사용 가능합니다.</p>
               <div class="home-quick-actions d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <div class="d-flex gap-2 flex-wrap">
                   <a class="btn btn-site-primary fw-bold border-2" href="/board/">썰게시판</a>
@@ -97,8 +99,8 @@
                   <a class="btn btn-outline-secondary fw-bold" href="/menu10/">이토유머</a>
                 </div>
                 <div class="home-quick-actions-secondary d-flex gap-2">
-                  <a class="btn btn-outline-secondary fw-bold" href="/matches/">해외축구</a>
-                  <a class="btn border border-2 border-danger text-danger fw-bold" href="/menu5/">Nada</a>
+                  <a class="btn btn-outline-secondary fw-bold" href="/menu7/">축구소식</a>
+                  <a class="btn border border-2 border-danger text-danger fw-bold" href="/matches/">해외축구</a>
                 </div>
               </div>
             </div>

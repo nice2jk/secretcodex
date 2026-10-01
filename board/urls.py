@@ -29,6 +29,7 @@ urlpatterns = [
     path("matches/", views.match_list, name="match_list"),
     path("popular/", views.popular_list, name="popular_list"),
     path("menu4/", views.menu4, name="menu4"),
+    path("menu5/password/", views.nada_password, name="nada_password"),
     path("menu5/", views.menu5, name="menu5"),
     path("menu5/new/", views.secret_create, name="secret_create"),
     path("menu5/<int:post_id>/", views.secret_detail, name="secret_detail"),

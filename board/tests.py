@@ -1,14 +1,21 @@
 import shutil
 import tempfile
+from django.contrib.auth.models import User
 from django.test import SimpleTestCase
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from unittest.mock import MagicMock, patch
 
 from board.forms import LoginForm
-from board.models import Post, SoccerMatch
+from board.models import Post, Profile, SoccerMatch
 from board.templatetags.board_extras import render_post_content
-from board.views import _format_accuracy_rate, _match_bet_accuracy_stats, _match_bet_accuracy_stats_by_league
+from board.views import (
+    NADA_PASSWORD,
+    NADA_SESSION_KEY,
+    _format_accuracy_rate,
+    _match_bet_accuracy_stats,
+    _match_bet_accuracy_stats_by_league,
+)
 
 
 class SsulPostApiTests(TestCase):
@@ -128,6 +135,80 @@ class LoginFormRememberMeTests(SimpleTestCase):
 
         self.assertTrue(form.is_valid())
         self.assertTrue(form.cleaned_data["remember_me"])
+
+
+@override_settings(ALLOWED_HOSTS=["testserver"])
+class NadaAccessTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(username="admin@example.com", password="pw")
+        Profile.objects.create(user=self.admin_user, nickname="admin")
+        self.regular_user = User.objects.create_user(username="user@example.com", password="pw")
+        Profile.objects.create(user=self.regular_user, nickname="user")
+
+    def _unlock_nada(self):
+        session = self.client.session
+        session[NADA_SESSION_KEY] = True
+        session.save()
+
+    def test_menu5_requires_nada_password_after_login(self):
+        self.client.force_login(self.regular_user)
+
+        response = self.client.get("/menu5/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response["Location"].startswith("/menu5/password/"))
+        self.assertIn("next=%2Fmenu5%2F", response["Location"])
+
+    def test_wrong_nada_password_shows_retry_toast_message(self):
+        self.client.force_login(self.regular_user)
+
+        response = self.client.post("/menu5/password/?next=/menu5/", {"password": "wrong"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "비밀번호가 틀렸습니다. 다시 입력해 주세요.")
+        self.assertContains(response, 'class="toast')
+
+    def test_correct_nada_password_unlocks_menu(self):
+        self.client.force_login(self.regular_user)
+
+        response = self.client.post("/menu5/password/?next=/menu5/", {"password": NADA_PASSWORD})
+
+        self.assertRedirects(response, "/menu5/", fetch_redirect_response=False)
+        self.assertTrue(self.client.session[NADA_SESSION_KEY])
+
+    def test_only_admin_nickname_can_create_nada_posts(self):
+        self.client.force_login(self.regular_user)
+        self._unlock_nada()
+
+        response = self.client.post("/menu5/new/", {"title": "비밀", "content": "본문"})
+
+        self.assertRedirects(response, "/menu5/", fetch_redirect_response=False)
+        self.assertEqual(Post.objects.filter(category="secret").count(), 0)
+
+        self.client.force_login(self.admin_user)
+        self._unlock_nada()
+        response = self.client.post("/menu5/new/", {"title": "관리자 글", "content": "본문"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Post.objects.filter(category="secret", author="admin").count(), 1)
+
+    def test_only_admin_nickname_can_delete_nada_posts(self):
+        post = Post.objects.create(title="비밀", content="본문", category="secret", author="user")
+        self.client.force_login(self.regular_user)
+        self._unlock_nada()
+
+        response = self.client.post(f"/menu5/{post.id}/delete/")
+
+        self.assertRedirects(response, f"/menu5/{post.id}/", fetch_redirect_response=False)
+        self.assertTrue(Post.objects.filter(id=post.id).exists())
+
+        self.client.force_login(self.admin_user)
+        self._unlock_nada()
+        response = self.client.post(f"/menu5/{post.id}/delete/")
+
+        self.assertRedirects(response, "/menu5/", fetch_redirect_response=False)
+        self.assertFalse(Post.objects.filter(id=post.id).exists())
 
 
 class SoccerMatchPredictionStatusTests(SimpleTestCase):
