@@ -91,7 +91,8 @@
           <div class="col-lg-10 col-xl-8">
             <div class="px-4 py-4 home-welcome-box rounded-4 shadow-sm border border-5">
               <h2 class="fs-4 fw-bold mb-2">Welcome to 쓰잘데기</h2>
-              <p class="small text-danger fw-bold mb-4">로그인을 하시면 게시판 사용 가능합니다.</p>
+              <p class="small text-danger fw-bold mb-2">로그인을 하시면 게시판 사용 가능합니다.</p>
+              <p class="small text-secondary fw-semibold mb-4">오늘 {{ today_visit_count|default:0 }} / 전체 {{ total_visit_count|default:0 }}</p>
               <div class="home-quick-actions d-flex justify-content-between align-items-center gap-2 flex-wrap">
                 <div class="d-flex gap-2 flex-wrap">
                   <a class="btn btn-site-primary fw-bold border-2" href="/board/">썰게시판</a>

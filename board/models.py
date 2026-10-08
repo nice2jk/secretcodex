@@ -163,3 +163,14 @@ class SoccerMatch(models.Model):
     @property
     def away_win_button_class(self):
         return self._prediction_button_class(self.OUTCOME_AWAY_WIN)
+
+
+class VisitCounter(models.Model):
+    date = models.DateField(unique=True)
+    count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.date}: {self.count}"

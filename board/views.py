@@ -16,11 +16,11 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.db import connection
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Sum
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from .forms import CommentForm, LinkPostForm, PostForm, SignUpForm, LoginForm, PasswordResetForm, PasswordChangeForm, InfoPostForm, ThreadPostForm
-from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch
+from .models import Comment, LinkPost, Post, PostImage, Profile, InfoPost, SoccerMatch, VisitCounter
 
 
 MAX_FAVORITE_MATCHES = 10
@@ -180,6 +180,23 @@ def _match_bet_accuracy_stats_by_league(year, leagues):
     return stats_by_league
 
 
+def _home_visit_stats(request):
+    today = timezone.now().astimezone(ZoneInfo("Asia/Seoul")).date()
+    session_key = f"home_visit_counted:{today.isoformat()}"
+
+    if not request.session.get(session_key):
+        counter, _ = VisitCounter.objects.get_or_create(date=today)
+        VisitCounter.objects.filter(pk=counter.pk).update(count=F("count") + 1)
+        request.session[session_key] = True
+
+    today_count = VisitCounter.objects.filter(date=today).values_list("count", flat=True).first() or 0
+    total_count = VisitCounter.objects.aggregate(total=Sum("count"))["total"] or 0
+    return {
+        "today_visit_count": today_count,
+        "total_visit_count": total_count,
+    }
+
+
 def home(request):
     recent_posts = Post.objects.order_by("-created_at")[:5]
     recent_links = InfoPost.objects.filter(category='thread').order_by("-created_at")[:5]
@@ -198,6 +215,7 @@ def home(request):
             "recent_recommended": recent_recommended,
             "recent_popular": recent_popular,
             "recent_best": recent_best,
+            **_home_visit_stats(request),
         },
     )
 

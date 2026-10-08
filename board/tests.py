@@ -7,7 +7,7 @@ from django.test import Client, TestCase, override_settings
 from unittest.mock import MagicMock, patch
 
 from board.forms import LoginForm
-from board.models import Post, Profile, SoccerMatch
+from board.models import Post, Profile, SoccerMatch, VisitCounter
 from board.templatetags.board_extras import render_post_content
 from board.views import (
     NADA_PASSWORD,
@@ -16,6 +16,30 @@ from board.views import (
     _match_bet_accuracy_stats,
     _match_bet_accuracy_stats_by_league,
 )
+
+
+@override_settings(ALLOWED_HOSTS=["testserver"])
+class HomeVisitCounterTests(TestCase):
+    def test_home_shows_today_and_total_visit_counts_once_per_session(self):
+        first_client = Client()
+
+        response = first_client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "오늘 1 / 전체 1")
+        self.assertEqual(VisitCounter.objects.get().count, 1)
+
+        response = first_client.get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "오늘 1 / 전체 1")
+        self.assertEqual(VisitCounter.objects.get().count, 1)
+
+        response = Client().get("/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "오늘 2 / 전체 2")
+        self.assertEqual(VisitCounter.objects.get().count, 2)
 
 
 class SsulPostApiTests(TestCase):
